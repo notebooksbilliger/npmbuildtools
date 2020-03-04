@@ -235,7 +235,7 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
             fileList.push(file);
         }
     });
-    tar.create({ file: tarPath, cwd: wrkDir, prefix: prefix, portable: true, mtime: new Date('1985-10-26T08:15:00.000Z'), sync: true, mode: 666 }, fileList);
+    tar.create({ file: tarPath, cwd: wrkDir, prefix: prefix, portable: true, mtime: new Date('1985-10-26T08:15:00.000Z'), sync: true }, fileList);
     console.info(`Created compression buffer '${tarPath}' from source folder '${wrkDir}'.`);
     var tarBuf = fs.readFileSync(tarPath);
     console.info(`Read ${tarBuf.length} bytes from compression buffer '${tarPath}'.`);
