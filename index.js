@@ -6,31 +6,42 @@ const zlib = require('zlib');
 const semver = require('semver');
 const intercept = require("intercept-stdout");
 
+const npm_version_latest_using_tar4 = '6.14.2';
 var npm_version = process.env['npm_version'];
 if (npm_version == undefined) {
-    var npm_cli_js = process.env['NPM_CLI_JS'];
-    if (npm_cli_js == undefined) {
-        npm_version = "6.14.1";
+    try {
+        npm_version = cp.execSync('npm -v').toString().trim();
+    } catch(err) {
+        console.error(err);
+        npm_version = npm_version_latest_using_tar4;
         console.warn(`Unable to determine npm version automatically, assuming [${npm_version}].`);
-    } else {
-        npm_version = cp.execFileSync(`${process.execPath}`, [ npm_cli_js, '-v']).toString().trim();
     }
     process.env['npm_version'] = npm_version; // Store this for subsequent calls/reuires.
 }
 var tar;
-if (semver.lte(npm_version, "6.14.1")) {
+if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
     /**
      * In order to get the same file modes in the headers of the newly
-     * created tar file as in the headers of the sorce tar file,
+     * created tar file as in the headers of the source tar file,
      * tar version 4 must be used because npm uses tar version 4 as well.
-     * At the time of this writing, the most recent npm version is 6.14.1,
-     * which (yet/still) has tar@^4.4.13 in it's dependencies.
+     * At the time of this writing, the most recent npm version is what
+     * can be found in the npm_version_latest_using_tar4 constant,
+     * which has tar@^4.x.x in it's dependencies.
      * A change in file mode handling when the 'portable' option is set 
      * to 'true' (i.e. the new mode-fix.js) has been introduced in tar
      * package version 5.0.1, which may be used in future versions of npm.
-     * As soon as this is the case, the above 'lastest npm version using
-     * a tar version less than 5.0.1' must be adjusted from 6.14.1 to
-     * whatever is the latest npm version using tar 4. 
+     * Until then, with every new version of npm, it's dependencies 
+     * need to be reviewed and the above 'npm_version_latest_using_tar4'
+     * variable must be adjusted to the new npm version, if it is yet
+     * using tar 4.
+     * As soon as npm will use a tar version >= 5.0.1, the variable needs
+     * to be changed for the last time (or even may be left as is), and
+     * this explanation text needs to be reduced to the minimum
+     * reasonable length, e.g.:
+     * In order to get the same file modes in the headers of the newly
+     * created tar file as in the headers of the source tar file,
+     * tar version 4 must be used with npm versions prior to the version
+     * found in the npm_version_latest_using_tar4 variable.
      */
     tar = require('tar4');
 } else {
