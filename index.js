@@ -282,7 +282,7 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
 //#region Console Capturing Support variables
 var stdout = [], stderr = [];
 var unhook_intercept;
-var silent = (process.env['ACTIONS_STEP_DEBUG'] != 'true');
+var silent = false; //(process.env['ACTIONS_STEP_DEBUG'] != 'true'); // Din't work
 exports.stdout = () => stdout;
 exports.stderr = () => stderr;
 //#endregion
