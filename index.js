@@ -285,6 +285,7 @@ var unhook_intercept;
 var silent = false; //(process.env['ACTIONS_STEP_DEBUG'] != 'true'); // Din't work
 exports.stdout = () => stdout;
 exports.stderr = () => stderr;
+exports.silent = () => silent;
 //#endregion
 
 exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
@@ -312,7 +313,7 @@ exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
 
 exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
     unhook_intercept();
-    if (emit) {
+    if (emit && !silent) {
         console.log(stdout.join(''));
         console.error(stderr.join(''));
     }
