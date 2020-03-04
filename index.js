@@ -192,10 +192,11 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
     function readDirRecurseSync(dir, prefix) {
         var list = [];
         fs.readdirSync(dir, { withFileTypes: true }).forEach(de => {
+            var relativePath = path.join(prefix || '', de.name);
             if (de.isDirectory()) {
-                list = list.concat(readDirRecurseSync(path.join(dir, de.name), de.name));
+                list = list.concat(readDirRecurseSync(path.join(dir, de.name), relativePath));
             } else {
-                list.push(path.join(prefix || '', de.name).replace(/\\/, '/'));
+                list.push(relativePath.replace(/\\/g, '/'));
             }
         });
         return list;
