@@ -218,10 +218,11 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
     });
     function readDirRecurseSync(dir, prefix) {
         var list = [];
-        fs.readdirSync(dir, { withFileTypes: true }).forEach(de => {
-            var relativePath = path.join(prefix || '', de.name);
-            if (de.isDirectory()) {
-                list = list.concat(readDirRecurseSync(path.join(dir, de.name), relativePath));
+        fs.readdirSync(dir).forEach(de => {
+            var relativePath = path.join(prefix || '', de);
+            var absolutePath = path.join(dir, de);
+            if (fs.lstatSync(absolutePath).isDirectory()) {
+                list = list.concat(readDirRecurseSync(absolutePath, relativePath));
             } else {
                 list.push(relativePath.replace(/\\/g, '/'));
             }

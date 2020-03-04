@@ -16,6 +16,9 @@
   "author": "Thorben Wolkersdorfer <thorbenw@nbb.com> (https://www.notebooksbilliger.de/)",
   "license": "MIT",
   "repository": "github:notebooksbilliger/npmbuildtools",
+  "engines": {
+    "node": ">=8.17.0"
+  },
   "directories": {
     "doc": "./doc",
     "lib": "./lib",
