@@ -280,8 +280,9 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
 }
 
 //#region Console Capturing Support variables
-var stdout, stderr;
+var stdout = [], stderr = [];
 var unhook_intercept;
+var silent = (process.env['ACTIONS_STEP_DEBUG'] != 'true');
 exports.stdout = () => stdout;
 exports.stderr = () => stderr;
 //#endregion
@@ -292,11 +293,19 @@ exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
     unhook_intercept = intercept(
         function(text) {
             if (text.length) stdout.push(text);
-            return '';
+            if (silent) {
+                return '';
+            } else {
+                return text;
+            }
         },
         function(text) {
             if (text.length) stderr.push(text);
-            return '';
+            if (silent) {
+                return '';
+            } else {
+                return text;
+            }
         }
     );
 }
