@@ -1,0 +1,11 @@
+Usage
+-----
+Specify the tools in the `scripts` section of the `package.npm` pachage file.
+[source,json]
+----
+include::doc/example.package.json[]
+----
+
+ToDos
+-----
+Improve README

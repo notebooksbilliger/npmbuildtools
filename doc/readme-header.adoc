@@ -1,0 +1,13 @@
+npmbuildtools
+=============
+:Author: Thorben Wolkersdorfer
+:Email: <thorbenw@nbb.com>
+:AuthorUrl: https://www.notebooksbilliger.de/
+:Date: 2020-3-4
+:Revision: 1.0.0
+:License: MIT
+
+- Version {revision}
+- Licensed under the {license} license.
+
+Tools for use with npm package management.
