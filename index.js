@@ -127,14 +127,30 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
         console.info(`Processing tarball '${tgzPath}'.`);
     }
 
-    var tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), tgzFile));
+    var wrkDir = fs.mkdtempSync(path.join(os.tmpdir(), tgzFile));
+    if (!fs.existsSync(wrkDir)) {
+        throw Error(`Failed to create working folder '${wrkDir}'.`);
+    } else {
+        console.info(`Created working folder '${wrkDir}'.`);
+    }
+
+    var tmpDir = fs.ensureDirSync(`${wrkDir}-temp`);
     if (!fs.existsSync(tmpDir)) {
         throw Error(`Failed to create temporary folder '${tmpDir}'.`);
     } else {
         console.info(`Created temporary folder '${tmpDir}'.`);
     }
 
-    var tarPath = `${tmpDir}.tar`;
+    if (debug) {
+        var tgzBak = path.join(tmpDir, `${tgzFile}.bak`);
+        console.debug(`Creating retention copy '${tgzBak}' of tarball '${tgzPath}'.`);
+        fs.copyFileSync(tgzPath, tgzBak);
+        if (!fs.existsSync(tgzBak)) {
+            throw Error(`Failed creating retention copy '${tgzBak}'.`);
+        }
+    }
+
+    var tarPath = path.join(tmpDir, `${path.basename(tgzFile, path.extname(tgzFile))}.tar`);
     console.info(`Using '${tarPath}' as compression/decompression buffer.`);
     if (fs.existsSync(tarPath)) {
         console.info(`Removing existing decompression buffer '${tarPath}'.`);
@@ -149,11 +165,11 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
     console.info(`Decompressed ${tarBuf.length} bytes from source file '${tgzPath}'.`);
     fs.writeFileSync(tarPath, tarBuf);
     console.info(`Wrote ${tarBuf.length} bytes to target file '${tarPath}'.`);
-    tar.extract({ file: tarPath, cwd: tmpDir, strip: 1, sync: true });
-    console.info(`Extracted data from source file '${tarPath}' to folder '${tmpDir}'.`);
+    tar.extract({ file: tarPath, cwd: wrkDir, strip: 1, sync: true });
+    console.info(`Extracted data from source file '${tarPath}' to folder '${wrkDir}'.`);
     var packageList = [];
     var packageListBin = [];
-    tar.list({ file: tarPath, cwd: tmpDir, strip: 1, sync: true, onentry: entry => {
+    tar.list({ file: tarPath, cwd: wrkDir, strip: 1, sync: true, onentry: entry => {
             packageListBin.push(entry);
             packageList.push(entry.path.replace(prefrx, ''));
         }
@@ -175,7 +191,7 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
     }
 
     // Begin processing package
-    process.env['npm_postpack_dir'] = tmpDir;
+    process.env['npm_postpack_dir'] = wrkDir;
     if (clientScripts) {
         if (!Array.isArray(clientScripts)) {
             clientScripts = [ clientScripts ];
@@ -194,10 +210,10 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
 
     var fileList = [];
     packageList.forEach(file => {
-        if (fs.existsSync(path.join(tmpDir, file))) {
+        if (fs.existsSync(path.join(wrkDir, file))) {
             fileList.push(file);
         } else {
-            console.debug(`File '${file}' no longer exists in '${tmpDir}' and will be removed from the package archive.`);
+            console.debug(`File '${file}' no longer exists in '${wrkDir}' and will be removed from the package archive.`);
         }
     });
     function readDirRecurseSync(dir, prefix) {
@@ -212,15 +228,15 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
         });
         return list;
     }
-    readDirRecurseSync(tmpDir).forEach(file => {
+    readDirRecurseSync(wrkDir).forEach(file => {
         if (!fileList.includes(file))
         {
-            console.debug(`File '${file}' is new in '${tmpDir}' and will be included in the package archive.`);
+            console.debug(`File '${file}' is new in '${wrkDir}' and will be included in the package archive.`);
             fileList.push(file);
         }
     });
-    tar.create({ file: tarPath, cwd: tmpDir, prefix: prefix, portable: true, mtime: new Date('1985-10-26T08:15:00.000Z'), sync: true, mode: 666 }, fileList);
-    console.info(`Created compression buffer '${tarPath}' from source folder '${tmpDir}'.`);
+    tar.create({ file: tarPath, cwd: wrkDir, prefix: prefix, portable: true, mtime: new Date('1985-10-26T08:15:00.000Z'), sync: true, mode: 666 }, fileList);
+    console.info(`Created compression buffer '${tarPath}' from source folder '${wrkDir}'.`);
     var tarBuf = fs.readFileSync(tarPath);
     console.info(`Read ${tarBuf.length} bytes from compression buffer '${tarPath}'.`);
     var tgzBuf = zlib.gzipSync(tarBuf);
@@ -228,10 +244,16 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
     fs.writeFileSync(tgzPath, tgzBuf);
     console.info(`Wrote ${tgzBuf.length} bytes to target file '${tgzPath}'.`);
     if (debug) {
+        tgzBak = path.join(tmpDir, `${tgzFile}`);
+        console.debug(`Creating retention copy '${tgzBak}' of new tarball '${tgzPath}'.`);
+        fs.copyFileSync(tgzPath, tgzBak);
+        if (!fs.existsSync(tgzBak)) {
+            throw Error(`Failed creating retention copy '${tgzBak}'.`);
+        }
         console.debug(`Retaining compression buffer '${tarPath}'.`);
         var tarList = [];
         var tarListBin = [];
-        tar.list({ file: tarPath, cwd: tmpDir, strip: 1, sync: true, onentry: entry => {
+        tar.list({ file: tarPath, cwd: wrkDir, strip: 1, sync: true, onentry: entry => {
                 tarListBin.push(entry);
                 tarList.push(entry.path.replace(prefrx, ''));
             }
@@ -249,11 +271,22 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
         }
     }
 
-    fs.removeSync(tmpDir);
-    if (fs.existsSync(tmpDir)) {
-        throw Error(`Failed to remove temporary folder '${tmpDir}'.`);
+    fs.removeSync(wrkDir);
+    if (fs.existsSync(wrkDir)) {
+        throw Error(`Failed to remove working folder '${wrkDir}'.`);
     } else {
-        console.info(`Removed temporary folder '${tmpDir}'.`);
+        console.info(`Removed working folder '${wrkDir}'.`);
+    }
+
+    if (fs.readdirSync(tmpDir).length > 0) {
+        console.debug(`Retaining temporary folder '${tmpDir}'.`);
+    } else {
+        fs.removeSync(tmpDir);
+        if (fs.existsSync(tmpDir)) {
+            throw Error(`Failed to remove temporary folder '${tmpDir}'.`);
+        } else {
+            console.info(`Removed temporary folder '${tmpDir}'.`);
+        }
     }
 }
 
