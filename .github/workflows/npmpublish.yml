@@ -18,7 +18,14 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
+      - run: | 
+          npm ci
+          npm pack
+          export NPM_TARBALL="/tmp/pac kage-1.0.0.tgz"
+          set
+          echo Publishing package $NPM_TARBALL
+          npm publish $NPM_TARBALL --access public --dry-run
+          npm publish "$NPM_TARBALL" --access public --dry-run
+        shell: bash
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
