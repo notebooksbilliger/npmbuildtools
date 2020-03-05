@@ -290,7 +290,13 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
         }
     }
 
-    process.env['NPM_TARBALL'] = tgzPath;
+    var npmTarballEnv = 'NPM_TARBALL';
+    process.env[npmTarballEnv] = tgzPath;
+    console.debug(`Set environment variable '${npmTarballEnv}' to '${process.env[npmTarballEnv]}'`);
+
+    var exportFile = path.resolve(path.join('.', npmTarballEnv));
+    console.debug(`Emitting tarball path '${tgzPath}' to export file '${exportFile}'.`);
+    fs.writeFileSync(exportFile, tgzPath, { encoding: 'utf8' });
 }
 
 exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {

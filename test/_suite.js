@@ -16,6 +16,12 @@ describe(`${thisPackage.name} PostPack() tests`, function () {
         }
         assert.ok(process.env[npmTarballEnv] == undefined);
 
+        var npmTarballFile = path.resolve('.', npmTarballEnv);
+        if (fs.existsSync(npmTarballFile)) {
+            fs.removeSync(npmTarballFile);
+        }
+        assert.ok(!fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should not exist`);
+
         btools.ConsoleCaptureStart();
         btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], true, true);
         btools.ConsoleCaptureStop();
@@ -23,8 +29,11 @@ describe(`${thisPackage.name} PostPack() tests`, function () {
         assert.ok(btools.stdout().length > 0, `stdout should contain lines`);
         assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines`);
         assert.ok((process.env[npmTarballEnv] != undefined), `Environment variable '${npmTarballEnv}' should exist`);
+        assert.ok(fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should exist`);
+        assert.equal(fs.readFileSync(npmTarballFile, { encoding: 'utf8' }), process.env[npmTarballEnv], `Environment variable '${npmTarballEnv}' value should equal content of file '${npmTarballFile}'`);
 
         delete process.env[npmTarballEnv];
+        fs.removeSync(npmTarballFile);
 
         done();
     });
