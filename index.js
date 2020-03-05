@@ -289,6 +289,8 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
             console.info(`Removed temporary folder '${tmpDir}'.`);
         }
     }
+
+    process.env['NPM_TARBALL'] = tgzPath;
 }
 
 exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {

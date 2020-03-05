@@ -10,12 +10,21 @@ console.log('Running Mocha Test Suite ...');
 describe(`${thisPackage.name} PostPack() tests`, function () {
     it('should succeed', function(done) {
 
+        var npmTarballEnv = 'NPM_TARBALL';
+        if (process.env[npmTarballEnv] != undefined) {
+            delete process.env[npmTarballEnv];
+        }
+        assert.ok(process.env[npmTarballEnv] == undefined);
+
         btools.ConsoleCaptureStart();
         btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], true, true);
         btools.ConsoleCaptureStop();
 
         assert.ok(btools.stdout().length > 0, `stdout should contain lines`);
         assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines`);
+        assert.ok((process.env[npmTarballEnv] != undefined), `Environment variable '${npmTarballEnv}' should exist`);
+
+        delete process.env[npmTarballEnv];
 
         done();
     });
