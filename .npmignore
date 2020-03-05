@@ -1,4 +1,6 @@
 test/**
+doc/**
 .vscode/**
 .github/**
 *.tgz
+*.atpl

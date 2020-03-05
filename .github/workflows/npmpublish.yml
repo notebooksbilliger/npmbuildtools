@@ -23,7 +23,7 @@ jobs:
           npm ci
           npm pack
           echo Publishing package [$NPM_TARBALL]
-          npm publish "$NPM_TARBALL" --access public --dry-run
+          npm publish "$NPM_TARBALL" --access public
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}

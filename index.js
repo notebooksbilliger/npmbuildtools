@@ -366,3 +366,56 @@ exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
         console.error(stderr.join(''));
     }
 }
+
+if (String.prototype.toLiteral == null) {
+    String.prototype.toLiteral = function () {
+        result =  '';
+        this.replace(/[\s\S]/g, function(character) {
+            var escape = character.charCodeAt();
+            switch (escape) {
+                case 0x0000:
+                    result += '\\0';
+                    break;
+                case 0x0008:
+                    result += '\\b';
+                    break;
+                case 0x0009:
+                    result += '\\t';
+                    break;
+                case 0x000a:
+                    result += '\\n';
+                    break;
+                case 0x000b:
+                    result += '\\v';
+                    break;
+                case 0x000c:
+                    result += '\\f';
+                    break;
+                case 0x000d:
+                    result += '\\r';
+                    break;
+                case 0x0022:
+                    result += '\\"';
+                    break;
+                case 0x0027:
+                    result += '\\\'';
+                    break;
+                case 0x005C:
+                    result += '\\\\';
+                    break;
+                default:
+                    escape = escape.toString(16);
+                    var longhand = escape.length > 2;
+                    result += '\\' + (longhand ? 'u' : 'x') + ('0000' + escape).slice(longhand ? -4 : -2);
+                    break;
+            }
+        });
+        return result;
+    }
+}
+
+if (String.prototype.isWhitespace == null) {
+    String.prototype.isWhitespace = function () {
+        return this.length > 0 && this.replace(/\s/g, '').length < 1;
+    }
+}
