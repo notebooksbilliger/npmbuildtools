@@ -23,7 +23,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
-    - run: git fetch
+    - run: git fetch --unshallow
     - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
     - run: npm install
     - run: npm pack
