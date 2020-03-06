@@ -3,7 +3,7 @@ npmbuildtools
 :Author: Thorben Wolkersdorfer
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
-:Date: 2020-3-5
+:Date: 2020-03-05
 :Revision: 1.0.0
 :License: MIT
 
