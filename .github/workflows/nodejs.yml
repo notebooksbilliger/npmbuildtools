@@ -16,13 +16,15 @@ jobs:
         os: [windows-latest, ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 10
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "doc"
-    - run: git checkout
-    - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "doc"
+    - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
+    - run: git fetch
+    - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
     - run: npm install
     - run: npm pack
     - run: npm test
