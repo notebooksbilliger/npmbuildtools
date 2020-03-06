@@ -108,6 +108,155 @@ describe(`${thisPackage.name}  AsciiDoc tests`, function () {
         done();
     });
 
+    it('GetAttribute() should fail without attributeName specification', function(done) {
+        var result;
+
+        btools.ConsoleCaptureStart();
+        try {
+            result = genadoc.GetAttribute();
+            btools.ConsoleCaptureStop();
+            assert.fail(`should have failed`);
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `The 'attributeName' parameter is not a string.`, `Error message should be`)
+            assert.equal(result, undefined, `Variable 'result' should have exact value`);
+        }
+
+        done();
+    });
+
+    it('GetAttribute() should fail with duplicate attribute definitions', function(done) {
+        var result;
+        var attributeName = 'attributeName';
+        var inputLines = [ `:${attributeName}: `, `:${attributeName}: ` ];
+
+        btools.ConsoleCaptureStart();
+        try {
+            result = genadoc.GetAttribute(attributeName, ...inputLines);
+            btools.ConsoleCaptureStop();
+            assert.fail(`should have failed`);
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `Attribute '${attributeName}' has been defined multiple times.`, `Error message should be`)
+            assert.equal(result, undefined, `Variable 'result' should have exact value`);
+        }
+
+        done();
+    });
+
+    it('GetAttribute() should succeed otherwise', function(done) {
+        var result;
+        var attributeName = 'attributeName';
+        var inputLines = [];
+
+        btools.ConsoleCaptureStart();
+        result = genadoc.GetAttribute('');
+        result = genadoc.GetAttribute('', ...inputLines);
+        btools.ConsoleCaptureStop();
+
+        assert.equal(btools.stdout().length, 0, `stdout shouldn't contain any lines`);
+        assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(result, undefined, `Variable 'result' should have exact value`);
+
+
+        btools.ConsoleCaptureStart();
+        result = genadoc.GetAttribute(attributeName, ...inputLines);
+        btools.ConsoleCaptureStop();
+
+        assert.equal(btools.stdout().length, 0, `stdout shouldn't contain any lines`);
+        assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(result, undefined, `Variable 'result' should have exact value`);
+
+
+        inputLines = [ `:${attributeName}:` ];
+        btools.ConsoleCaptureStart();
+        result = genadoc.GetAttribute(attributeName, ...inputLines);
+        btools.ConsoleCaptureStop();
+
+        assert.equal(btools.stdout().length, 0, `stdout shouldn't contain any lines`);
+        assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(result, undefined, `Variable 'result' should have exact value`);
+
+        
+        inputLines = [ `:${attributeName}: ` ];
+        btools.ConsoleCaptureStart();
+        result = genadoc.GetAttribute(attributeName, ...inputLines);
+        btools.ConsoleCaptureStop();
+
+        assert.equal(btools.stdout().length, 0, `stdout shouldn't contain any lines`);
+        assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(result, '', `Variable 'result' should have exact value`);
+
+        done();
+    });
+
+    it('GetLastCommitTimestamp() should fail with faulty path specification', function(done) {
+        var result;
+
+        btools.ConsoleCaptureStart();
+        try {
+            result = genadoc.GetLastCommitTimestamp('');
+            btools.ConsoleCaptureStop();
+            assert.fail(`should have failed`);
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `'' is not a valid path specification for parameter 'path'.`, `Error message should be`)
+            assert.equal(result, undefined, `Variable 'result' should have exact value`);
+        }
+
+        done();
+    });
+
+    it('GetLastCommitTimestamp() should fail with erroneous command', function(done) {
+        var result;
+        var fakeCommand = 123;
+
+        btools.ConsoleCaptureStart();
+        try {
+            result = genadoc.GetLastCommitTimestamp('fakeFileName', fakeCommand);
+            btools.ConsoleCaptureStop();
+            assert.fail(`should have failed`);
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `Command failed: git ${fakeCommand}\ngit: '${fakeCommand}' is not a git command. See 'git --help'.\n`, `Error message should be`)
+            assert.equal(result, undefined, `Variable 'result' should have exact value`);
+        }
+
+        done();
+    });
+
+    it('GetLastCommitTimestamp() should return NaN with unknown or untracked path specification', function(done) {
+        var result;
+
+        btools.ConsoleCaptureStart();
+        result = genadoc.GetLastCommitTimestamp(path.resolve('fakefile'));
+        btools.ConsoleCaptureStop();
+
+        assert.equal(btools.stdout().length, 0, `stdout shouldn't contain any lines:\n${btools.stderr().toString()}`);
+        assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines:\n${btools.stderr().toString()}`);
+        assert.ok(isNaN(result), `Variable 'result' should be NaN`);
+
+        done();
+    });
+
+    it('GetLastCommitTimestamp() should succeed otherwise', function(done) {
+        var result;
+
+        btools.ConsoleCaptureStart();
+        result = genadoc.GetLastCommitTimestamp('index.js');
+        btools.ConsoleCaptureStop();
+
+        assert.equal(btools.stdout().length, 0, `stdout shouldn't contain any lines:\n${btools.stderr().toString()}`);
+        assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines:\n${btools.stderr().toString()}`);
+        assert.ok(!isNaN(result), `Variable 'result' should not be NaN`);
+        assert.equal(typeof(result), 'number', `Variable 'result' should have exact type`);
+        done();
+    });
+
     it('GenerateReadme() should succeed', function(done) {
         var packagePath = path.resolve('.');
         var readmeFileName = 'README.adoc';
@@ -119,7 +268,7 @@ describe(`${thisPackage.name}  AsciiDoc tests`, function () {
         }
 
         btools.ConsoleCaptureStart();
-        genadoc.GenerateReadme(packagePath, readmeFileName);
+        genadoc.GenerateReadme(packagePath, readmeFileName, null, true);
         btools.ConsoleCaptureStop();
 
         assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
