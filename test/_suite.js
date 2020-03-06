@@ -272,9 +272,9 @@ describe(`${thisPackage.name}  AsciiDoc tests`, function () {
         btools.ConsoleCaptureStop();
 
         assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
-        assert.equal(btools.stdout().length, 2, `stdout should contain exact number of lines`);
+        assert.equal(btools.stdout().length, 3, `stdout should contain exact number of lines:\n${btools.stderr().toString()}`);
         assert.equal(btools.stdout()[0], `Creating/Updating file '${readmeFileName}'.\n`, `stdout first  line should contain`);
-        assert.equal(btools.stdout()[1], `Successfully updated file '${readmeFile}'.\n`, `stdout second line should contain`);
+        assert.equal(btools.stdout()[2], `Successfully updated file '${readmeFile}'.\n`, `stdout second line should contain`);
         assert.equal(btools.stderr().length, 0, `stderr shouldn't contain any lines:\n${btools.stderr().toString()}`);
 
         var newReadmeContent = fs.readFileSync(readmeFile, { encoding: 'utf8' });
