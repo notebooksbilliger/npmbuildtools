@@ -214,7 +214,6 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         btools.ConsoleCaptureStart();
         try {
             result = genadoc.GetLastCommitTimestamp('fakeFileName', fakeCommand);
-            btools.ConsoleCaptureStop();
             assert.fail(`should have failed`);
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -250,7 +249,7 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
 
         btools.ConsoleCaptureStart();
         try {
-            result = genadoc.GetLastCommitTimestamp('index.js');
+            result = genadoc.GetLastCommitTimestamp(path.resolve('.'));
             btools.ConsoleCaptureStop();
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -275,8 +274,13 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         }
 
         btools.ConsoleCaptureStart();
-        genadoc.GenerateReadme(packagePath, readmeFileName, null, true);
-        btools.ConsoleCaptureStop();
+        try {
+            genadoc.GenerateReadme(packagePath, readmeFileName, null, true);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
         // assert.equal(btools.stdout.length, 3, `stdout should contain exact number of lines:\n${btools.stderr.toString()}`);
