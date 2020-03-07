@@ -329,8 +329,7 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
 }
 
 //#region Console Capturing Support
-var stdout = [], stderr = [];
-var unhook_intercept;
+var stdout = [], stderr = [], unhook_intercept = null;
 Object.defineProperty(exports, 'stdout', {
     enumerable: false,
     configurable: false,
@@ -354,33 +353,37 @@ Object.defineProperty(exports, 'stderr', {
 });
 
 exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
-    if (!unhook_intercept) {
-        stdout = [];
-        stderr = [];
-        unhook_intercept = intercept(
-            function(text) {
-                if (text.length) stdout.push(text);
-                if (debugMode) {
-                    return text;
-                } else {
-                    return '';
-                }
-            },
-            function(text) {
-                if (text.length) stderr.push(text);
-                if (debugMode) {
-                    return text;
-                } else {
-                    return '';
-                }
-            }
-        );
-    } else {
+    if (unhook_intercept) {
         throw Error('Console capture has already been started.');
     }
+
+    stdout = [];
+    stderr = [];
+    unhook_intercept = intercept(
+        function(text) {
+            if (text.length) stdout.push(text);
+            if (debugMode) {
+                return text;
+            } else {
+                return '';
+            }
+        },
+        function(text) {
+            if (text.length) stderr.push(text);
+            if (debugMode) {
+                return text;
+            } else {
+                return '';
+            }
+        }
+    );
 }
 
 exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
+    if (!unhook_intercept) {
+        throw Error('Console capture has not been started.');
+    }
+
     unhook_intercept();
     unhook_intercept = null;
     if (emit) {
@@ -513,6 +516,10 @@ defineReadOnlyProperty('DebugMode', true, () => debugMode);
  */
 exports.TerminalCanBlock = true;
 defineReadOnlyProperty('TerminalCanBlock', true, () => {
+    console.debug(`process.stdin = ${process.stdin}`);
+    console.debug(`process.stdin.setRawMode = ${process.stdin.setRawMode}`);
+    console.debug(`unhook_intercept = ${unhook_intercept}`);
+    console.debug(`runningInGitHub = ${runningInGitHub}`);
     return (process.stdin) && (process.stdin.setRawMode) && (!unhook_intercept) && (!runningInGitHub);
 });
 //#endregion
