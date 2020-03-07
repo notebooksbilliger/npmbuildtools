@@ -78,7 +78,6 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         btools.ConsoleCaptureStart();
         try {
             result = genadoc.ResolveIncludes();
-            btools.ConsoleCaptureStop();
             assert.fail(`should have failed`);
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -90,30 +89,12 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         done();
     });
 
-    it('ResolveIncludes() should fail without lineBreak specification', function(done) {
-        var result;
-
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.ResolveIncludes('.');
-            btools.ConsoleCaptureStop();
-            assert.fail(`should have failed`);
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `The 'lineBreak' parameter is not a string.`, `Error message should be`)
-            assert.equal(result, undefined, `Variable 'result' should have exact value`);
-        }
-
-        done();
-    });
-
     it('ResolveIncludes() should succeed', function(done) {
         var fakeRoot = '.';
         var fakePath = 'fakePath';
 
         btools.ConsoleCaptureStart();
-        genadoc.ResolveIncludes(fakeRoot, '\r\n', `include::${fakePath}[]include::${fakePath}[]`);
+        genadoc.ResolveIncludes(fakeRoot, `include::${fakePath}[]include::${fakePath}[]`);
         btools.ConsoleCaptureStop();
 
         assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
@@ -249,8 +230,13 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         var result;
 
         btools.ConsoleCaptureStart();
-        result = genadoc.GetLastCommitTimestamp(path.resolve('fakefile'));
-        btools.ConsoleCaptureStop();
+        try {
+            result = genadoc.GetLastCommitTimestamp(path.resolve('fakefile'));
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines:\n${btools.stderr.toString()}`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
@@ -263,8 +249,13 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         var result;
 
         btools.ConsoleCaptureStart();
-        result = genadoc.GetLastCommitTimestamp('index.js');
-        btools.ConsoleCaptureStop();
+        try {
+            result = genadoc.GetLastCommitTimestamp('index.js');
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         // assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines:\n${btools.stderr.toString()}`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);

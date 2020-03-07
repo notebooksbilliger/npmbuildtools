@@ -17,6 +17,7 @@ Usage
 Specify the tools in the `scripts` section of the `package.json` package file, like so:
 [source,json]
 ----
+{
     "name": "myPackage",
     "version": "1.0.0",
     "description": "Example package",
