@@ -22,13 +22,13 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: Get full git commit history
       run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
-      run: git fetch --unshallow
-      run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
-      run: git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-      run: git fetch origin
-      run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
-      run: git fetch --all
-      run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
+    - run: git fetch --unshallow
+    - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
+    - run: git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+    - run: git fetch origin
+    - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
+    - run: git fetch --all
+    - run: git --no-pager show --name-status --format=%cd --date=iso-strict --reflog -- "."
     - run: npm install
     - run: npm pack
     - run: npm test
