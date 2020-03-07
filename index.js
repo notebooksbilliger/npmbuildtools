@@ -516,10 +516,6 @@ defineReadOnlyProperty('DebugMode', true, () => debugMode);
  */
 exports.TerminalCanBlock = true;
 defineReadOnlyProperty('TerminalCanBlock', true, () => {
-    console.debug(`process.stdin = ${process.stdin}`);
-    console.debug(`process.stdin.setRawMode = ${process.stdin.setRawMode}`);
-    console.debug(`unhook_intercept = ${unhook_intercept}`);
-    console.debug(`runningInGitHub = ${runningInGitHub}`);
-    return (process.stdin) && (process.stdin.setRawMode) && (!unhook_intercept) && (!runningInGitHub);
+    return (process.stdin.setRawMode != undefined) && (!unhook_intercept) && (!runningInGitHub);
 });
 //#endregion

@@ -24,7 +24,7 @@ describe(`${thisPackage.name} PostPack() tests`, function () {
         assert.ok(process.env[npmTarballEnv] == undefined);
 
         btools.ConsoleCaptureStart();
-        btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], true, true);
+        btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], true, btools.DebugMode);
         btools.ConsoleCaptureStop();
 
         assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
