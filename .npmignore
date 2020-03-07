@@ -1,5 +1,7 @@
 test/**
+doc/**
 .vscode/**
 .github/**
 *.tgz
+*.atpl
 NPM_TARBALL

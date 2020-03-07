@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node ./node_modules/mocha/bin/_mocha --timeout 999999 --colors ./test/_suite.js",
-    "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.test', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test' ] ])\"",
+    "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.test', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ] ], true)\"",
     "prepublishOnly": "node -e \"require('./lib/generate-adoc').GenerateReadme()\""
   },
   "keywords": [
@@ -25,6 +25,8 @@
     "test": "./test"
   },
   "devDependencies": {
+    "colors": "^1.4.0",
+    "diff": "^4.0.2",
     "fs-extra": "^8.1.0",
     "intercept-stdout": "^0.1.2",
     "mocha": "^7.1.0",

@@ -3,7 +3,7 @@ npmbuildtools
 :Author: Thorben Wolkersdorfer
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
-:Date: 2020-3-5
+:Date: 2020-03-05
 :Revision: 1.0.0
 :License: MIT
 
@@ -14,10 +14,21 @@ Tools for use with npm package management.
 
 Usage
 -----
-Specify the tools in the `scripts` section of the `package.npm` pachage file.
+Specify the tools in the `scripts` section of the `package.json` package file, like so:
 [source,json]
 ----
-include::doc/example.package.json[]
+    "name": "myPackage",
+    "version": "1.0.0",
+    "description": "Example package",
+    "main": "index.js",
+    "scripts": {
+      "postpack": "node -e \"require('buildtools').PostPack([ [ './node_modules/@nbb.com/buildtools/lib/clean-package-elements', 'scripts.postpack', 'directories.test' ] ])\"",
+      "postinstall": "node ./node_modules/@nbb.com/buildtools/lib/check-global-deps npm typescript"
+    },
+    "directories": {
+        "test": "./test"
+    }
+}
 ----
 
 ToDos

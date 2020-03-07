@@ -18,6 +18,7 @@ if (npm_version == undefined) {
     }
     process.env['npm_version'] = npm_version; // Store this for subsequent calls/reuires.
 }
+
 var tar;
 if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
     /**
@@ -333,42 +334,194 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
     }
 }
 
-//#region Console Capturing Support variables
-var stdout = [], stderr = [];
-var unhook_intercept;
-var silent = false; //(process.env['ACTIONS_STEP_DEBUG'] != 'true'); // Din't work
-exports.stdout = () => stdout;
-exports.stderr = () => stderr;
-exports.silent = () => silent;
-//#endregion
+//#region Console Capturing Support
+var stdout = [], stderr = [], unhook_intercept = null;
+Object.defineProperty(exports, 'stdout', {
+    enumerable: false,
+    configurable: false,
+    get: function() {
+        return stdout;
+    },
+    set: function() {
+        throw TypeError(`Property 'stdout' is read-only.`);
+    }
+});
+
+Object.defineProperty(exports, 'stderr', {
+    enumerable: false,
+    configurable: false,
+    get: function() {
+        return stderr;
+    },
+    set: function() {
+        throw TypeError(`Property 'stderr' is read-only.`);
+    }
+});
 
 exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
+    if (unhook_intercept) {
+        throw Error('Console capture has already been started.');
+    }
+
     stdout = [];
     stderr = [];
     unhook_intercept = intercept(
         function(text) {
             if (text.length) stdout.push(text);
-            if (silent) {
-                return '';
-            } else {
+            if (debugMode) {
                 return text;
+            } else {
+                return '';
             }
         },
         function(text) {
             if (text.length) stderr.push(text);
-            if (silent) {
-                return '';
-            } else {
+            if (debugMode) {
                 return text;
+            } else {
+                return '';
             }
         }
     );
 }
 
 exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
+    if (!unhook_intercept) {
+        throw Error('Console capture has not been started.');
+    }
+
     unhook_intercept();
-    if (emit && !silent) {
+    unhook_intercept = null;
+    if (emit) {
         console.log(stdout.join(''));
         console.error(stderr.join(''));
     }
 }
+//#endregion
+
+//#region String extensions
+if (String.prototype.toLiteral == null) {
+    String.prototype.toLiteral = function () {
+        result =  '';
+        this.replace(/[\s\S]/g, function(character) {
+            var escape = character.charCodeAt();
+            switch (escape) {
+                case 0x0000:
+                    result += '\\0';
+                    break;
+                case 0x0008:
+                    result += '\\b';
+                    break;
+                case 0x0009:
+                    result += '\\t';
+                    break;
+                case 0x000a:
+                    result += '\\n';
+                    break;
+                case 0x000b:
+                    result += '\\v';
+                    break;
+                case 0x000c:
+                    result += '\\f';
+                    break;
+                case 0x000d:
+                    result += '\\r';
+                    break;
+                case 0x0022:
+                    result += '\\"';
+                    break;
+                case 0x0027:
+                    result += '\\\'';
+                    break;
+                case 0x005C:
+                    result += '\\\\';
+                    break;
+                default:
+                    escape = escape.toString(16);
+                    var longhand = escape.length > 2;
+                    result += '\\' + (longhand ? 'u' : 'x') + ('0000' + escape).slice(longhand ? -4 : -2);
+                    break;
+            }
+        });
+        return result;
+    }
+}
+
+if (String.prototype.isWhitespace == null) {
+    String.prototype.isWhitespace = function () {
+        return this.length > 0 && this.replace(/\s/g, '').length < 1;
+    }
+}
+//#endregion
+
+//#region Read-only properties
+/**
+ * Internal list of read-only properties added by `defineReadOnlyProperty()`
+ * @type {string[]}
+ */
+const readOnlyProperties = [];
+/**
+ * Creates a read-only property on the `exports` object and optionally
+ * adds the property name `p` to the `readOnlyProperties[]` array.
+ * @param {string} p The property name.
+ * @param {boolean} enumerable Controls whether the property name `p` is added to the `readOnlyProperties[]` array.
+ * @param {()} getter The `get` function.
+ */
+function defineReadOnlyProperty(p, enumerable, getter) {
+    Object.defineProperty(exports, p, {
+        enumerable: false,
+        configurable: false,
+        get: getter,
+        set: function() {
+            throw TypeError(`Property '${p}' is read-only.`);
+        }
+    });
+    if (enumerable) {
+        readOnlyProperties.push(p);
+    }
+}
+
+/**
+ * @returns A list of read-only properties that have been added
+ * with `defineReadOnlyProperty()` and parameter
+ * `enumerable` set to `true`.
+ * 
+ * ---
+ * Albeit all read-only properties added with `defineReadOnlyProperty()`
+ * have their `enumerable` attribute set to `false` (to avoid them 
+ * being serialized e.g. throuch `JSON.stringyfy()`), their names can
+ * be obtained through this property.
+ * @type {string[]}
+ */
+exports.ReadOnlyProperties = null;
+defineReadOnlyProperty('ReadOnlyProperties', false, () => readOnlyProperties);
+
+/** Internal, initialized on module load */
+const runningInGitHub = !(process.env['GITHUB_WORKFLOW'] == undefined);
+/**
+ * @returns A value indicating if the module is running
+ * as part of a GitHub Action workflow.
+ */
+exports.RunningInGitHub = false;
+defineReadOnlyProperty('RunningInGitHub', true, () => runningInGitHub);
+
+/** Internal, initialized on module load */
+const debugMode = (process.env['ACTIONS_STEP_DEBUG'] && `${process.env['ACTIONS_STEP_DEBUG']}`.toLowerCase() == 'true')
+               || (process.argv && process.argv.includes('--vscode-debug'));
+/**
+* @returns A value indicating if the module is running
+* in debug mode, evaluating multiple different conditions.
+*/
+exports.DebugMode = false;
+defineReadOnlyProperty('DebugMode', true, () => debugMode);
+
+/**
+* @returns A value indicating if the termial (i.e. `stdout`)
+* can be blocked to wait for user input, evaluating multiple
+* different conditions.
+ */
+exports.TerminalCanBlock = true;
+defineReadOnlyProperty('TerminalCanBlock', true, () => {
+    return (process.stdin.setRawMode != undefined) && (!unhook_intercept) && (!runningInGitHub);
+});
+//#endregion
