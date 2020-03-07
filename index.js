@@ -335,28 +335,37 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
 }
 
 //#region Console Capturing Support
-var stdout = [], stderr = [], unhook_intercept = null;
-Object.defineProperty(exports, 'stdout', {
-    enumerable: false,
-    configurable: false,
-    get: function() {
-        return stdout;
-    },
-    set: function() {
-        throw TypeError(`Property 'stdout' is read-only.`);
-    }
-});
+/**
+ * Internal buffer for captured stdout text lines.
+ * @type {string[]}
+ */
+var stdout = [];
 
-Object.defineProperty(exports, 'stderr', {
-    enumerable: false,
-    configurable: false,
-    get: function() {
-        return stderr;
-    },
-    set: function() {
-        throw TypeError(`Property 'stderr' is read-only.`);
-    }
-});
+/**
+ * Internal buffer for captured stderr text lines.
+ * @type {string[]}
+ */
+var stderr = [];
+
+/**
+ * Internal variable for caching a function that resets stdout and stderr.
+ * @type {()}
+ */
+var unhook_intercept = null;
+
+/**
+ * @returns A buffer of captured stdout text lines.
+ * @type {string[]}
+ */
+exports.stdout = [];
+defineReadOnlyProperty('stdout', false, () => stdout);
+
+/**
+ * @returns A buffer of captured stderr text lines.
+ * @type {string[]}
+ */
+exports.stderr = [];
+defineReadOnlyProperty('stderr', false, () => stderr);
 
 exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
     if (unhook_intercept) {
