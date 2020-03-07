@@ -22,6 +22,7 @@ jobs:
         run: | 
           npm ci
           npm pack
+          export NPM_TARBALL="$(cat NPM_TARBALL)"
           echo Publishing package [$NPM_TARBALL]
           npm publish "$NPM_TARBALL" --access public
         shell: bash

@@ -4,3 +4,4 @@ doc/**
 .github/**
 *.tgz
 *.atpl
+NPM_TARBALL
