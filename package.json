@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node ./node_modules/mocha/bin/_mocha --timeout 999999 --colors ./test/_suite.js",
-    "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.test', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ] ])\"",
+    "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.test', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ] ], true)\"",
     "prepublishOnly": "node -e \"require('./lib/generate-adoc').GenerateReadme()\""
   },
   "keywords": [

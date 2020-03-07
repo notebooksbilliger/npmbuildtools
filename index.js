@@ -18,6 +18,7 @@ if (npm_version == undefined) {
     }
     process.env['npm_version'] = npm_version; // Store this for subsequent calls/reuires.
 }
+
 var tar;
 if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
     /**
@@ -327,46 +328,69 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
     }
 }
 
-//#region Console Capturing Support variables
+//#region Console Capturing Support
 var stdout = [], stderr = [];
 var unhook_intercept;
-var silent = false; //(process.env['ACTIONS_STEP_DEBUG'] != 'true'); // Din't work
-exports.stdout = () => stdout;
-exports.stderr = () => stderr;
-exports.silent = () => silent;
-//#endregion
+Object.defineProperty(exports, 'stdout', {
+    enumerable: false,
+    configurable: false,
+    get: function() {
+        return stdout;
+    },
+    set: function() {
+        throw TypeError(`Property 'stdout' is read-only.`);
+    }
+});
+
+Object.defineProperty(exports, 'stderr', {
+    enumerable: false,
+    configurable: false,
+    get: function() {
+        return stderr;
+    },
+    set: function() {
+        throw TypeError(`Property 'stderr' is read-only.`);
+    }
+});
 
 exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
     stdout = [];
     stderr = [];
-    unhook_intercept = intercept(
-        function(text) {
-            if (text.length) stdout.push(text);
-            if (silent) {
-                return '';
-            } else {
-                return text;
+    if (!unhook_intercept) {
+        unhook_intercept = intercept(
+            function(text) {
+                if (text.length) stdout.push(text);
+                if (debugMode) {
+                    return text;
+                } else {
+                    return '';
+                }
+            },
+            function(text) {
+                if (text.length) stderr.push(text);
+                if (debugMode) {
+                    return text;
+                } else {
+                    return '';
+                }
             }
-        },
-        function(text) {
-            if (text.length) stderr.push(text);
-            if (silent) {
-                return '';
-            } else {
-                return text;
-            }
-        }
-    );
+        );
+    } else {
+        throw Error('Console capture has already been started.');
+    }
 }
 
 exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
     unhook_intercept();
-    if (emit && !silent) {
+    unhook_intercept = null;
+    if (emit || debugMode) {
         console.log(stdout.join(''));
         console.error(stderr.join(''));
     }
 }
+//#endregion
 
+//#region String extensions
 if (String.prototype.toLiteral == null) {
     String.prototype.toLiteral = function () {
         result =  '';
@@ -419,3 +443,76 @@ if (String.prototype.isWhitespace == null) {
         return this.length > 0 && this.replace(/\s/g, '').length < 1;
     }
 }
+//#endregion
+
+//#region Read-only properties
+/**
+ * Internal list of read-only properties added by `defineReadOnlyProperty()`
+ * @type {string[]}
+ */
+const readOnlyProperties = [];
+/**
+ * Creates a read-only property on the `exports` object and optionally
+ * adds the property name `p` to the `readOnlyProperties[]` array.
+ * @param {string} p The property name.
+ * @param {boolean} enumerable Controls whether the property name `p` is added to the `readOnlyProperties[]` array.
+ * @param {()} getter The `get` function.
+ */
+function defineReadOnlyProperty(p, enumerable, getter) {
+    Object.defineProperty(exports, p, {
+        enumerable: false,
+        configurable: false,
+        get: getter,
+        set: function() {
+            throw TypeError(`Property '${p}' is read-only.`);
+        }
+    });
+    if (enumerable) {
+        readOnlyProperties.push(p);
+    }
+}
+
+/**
+ * @returns A list of read-only properties that have been added
+ * with `defineReadOnlyProperty()` and parameter
+ * `enumerable` set to `true`.
+ * 
+ * ---
+ * Albeit all read-only properties added with `defineReadOnlyProperty()`
+ * have their `enumerable` attribute set to `false` (to avoid them 
+ * being serialized e.g. throuch `JSON.stringyfy()`), their names can
+ * be obtained through this property.
+ * @type {string[]}
+ */
+exports.ReadOnlyProperties = null;
+defineReadOnlyProperty('ReadOnlyProperties', false, () => readOnlyProperties);
+
+/** Internal, initialized on module load */
+const runningInGitHub = !(process.env['GIT_WORKFLOW'] == undefined);
+/**
+ * @returns A value indicating if the module is running
+ * as part of a GitHub Action workflow.
+ */
+exports.RunningInGitHub = false;
+defineReadOnlyProperty('RunningInGitHub', true, () => runningInGitHub);
+
+/** Internal, initialized on module load */
+const debugMode = (process.env['ACTIONS_STEP_DEBUG'] && `${process.env['ACTIONS_STEP_DEBUG']}`.toLowerCase() == 'true')
+               || (process.argv && process.argv.includes('--vscode-debug'));
+/**
+* @returns A value indicating if the module is running
+* in debug mode, evaluating multiple different conditions.
+*/
+exports.DebugMode = false;
+defineReadOnlyProperty('DebugMode', true, () => debugMode);
+
+/**
+* @returns A value indicating if the termial (i.e. `stdout`)
+* can be blocked to wait for user input, evaluating multiple
+* different conditions.
+ */
+exports.TerminalCanBlock = true;
+defineReadOnlyProperty('TerminalCanBlock', true, () => {
+    return process.stdin.setRawMode && !unhook_intercept && !runningInGitHub;
+});
+//#endregion
