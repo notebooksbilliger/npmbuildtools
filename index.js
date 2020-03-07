@@ -354,9 +354,9 @@ Object.defineProperty(exports, 'stderr', {
 });
 
 exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
-    stdout = [];
-    stderr = [];
     if (!unhook_intercept) {
+        stdout = [];
+        stderr = [];
         unhook_intercept = intercept(
             function(text) {
                 if (text.length) stdout.push(text);
@@ -383,7 +383,7 @@ exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
 exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
     unhook_intercept();
     unhook_intercept = null;
-    if (emit || debugMode) {
+    if (emit) {
         console.log(stdout.join(''));
         console.error(stderr.join(''));
     }
@@ -488,7 +488,7 @@ exports.ReadOnlyProperties = null;
 defineReadOnlyProperty('ReadOnlyProperties', false, () => readOnlyProperties);
 
 /** Internal, initialized on module load */
-const runningInGitHub = !(process.env['GIT_WORKFLOW'] == undefined);
+const runningInGitHub = !(process.env['GITHUB_WORKFLOW'] == undefined);
 /**
  * @returns A value indicating if the module is running
  * as part of a GitHub Action workflow.
@@ -513,6 +513,6 @@ defineReadOnlyProperty('DebugMode', true, () => debugMode);
  */
 exports.TerminalCanBlock = true;
 defineReadOnlyProperty('TerminalCanBlock', true, () => {
-    return process.stdin.setRawMode && !unhook_intercept && !runningInGitHub;
+    return (process.stdin) && (process.stdin.setRawMode) && (!unhook_intercept) && (!runningInGitHub);
 });
 //#endregion
