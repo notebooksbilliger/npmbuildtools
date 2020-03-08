@@ -16,12 +16,12 @@ jobs:
         os: [windows-latest, ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 2147483647
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Get full git commit history
+      run: git fetch --unshallow
     - run: npm install
     - run: npm pack
     - run: npm test
