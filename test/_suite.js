@@ -220,10 +220,10 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         var packagePath = path.resolve('.');
         var readmeFileName = 'README.adoc';
 
-        var oldReadmeContent ='';
+        var readmeContent = '';
         var readmeFile = path.join(packagePath, readmeFileName);
         if (fs.existsSync(readmeFile)) {
-            oldReadmeContent = fs.readFileSync(readmeFile, { encoding: 'utf8' });
+            readmeContent = fs.readFileSync(readmeFile, { encoding: 'utf8' });
         }
 
         btools.ConsoleCaptureStart();
@@ -233,6 +233,10 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         } catch(err) {
             btools.ConsoleCaptureStop();
             throw err;
+        } finally {
+            if (readmeContent) {
+                fs.writeFileSync(readmeFile, readmeContent, { encoding: 'utf8' });
+            }
         }
 
         assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
@@ -240,28 +244,6 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         assert.equal(btools.stdout[0], `Creating/Updating file '${readmeFileName}'.\n`, `stdout first  line should contain`);
         assert.equal(btools.stdout[btools.stdout.length - 1], `Successfully updated file '${readmeFile}'.\n`, `stdout second line should contain`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
-
-        var newReadmeContent = fs.readFileSync(readmeFile, { encoding: 'utf8' });
-        if (oldReadmeContent != newReadmeContent) {
-            function markWhiteSpace(text) {
-                if (text.isWhitespace()) {
-                    return text.toLiteral() + text;
-                } else {
-                    return text;
-                }
-            }
-            const diff = require('diff'); require('colors');
-            function colorize(diff, addedColor, removedColor, unchangedColor) {
-                if (diff.added) { return markWhiteSpace(diff.value)[addedColor]; }
-                if (diff.removed) { return markWhiteSpace(diff.value)[removedColor]; }
-                return diff.value[unchangedColor];
-            }
-            var changes = [];
-            diff.diffChars(oldReadmeContent, newReadmeContent, { newlineIsToken: true } ).forEach(function(part){
-                changes.push(colorize(part, 'green', 'red', 'grey')); // green for additions, red for deletions grey for common parts
-            });
-            assert.fail(`Readme file '${readmeFile}' needs to be updated:\n${changes.join('')}`);
-        }
 
         done();
     });
@@ -345,6 +327,29 @@ describe(`${thisPackage.name} CheckGlobalDeps() tests`, function () {
         } catch(err) {
             btools.ConsoleCaptureStop();
             throw err;
+        }
+
+        done();
+    });
+});
+
+describe(`${thisPackage.name} Readme should be up to date`, function() {
+    it('CheckReadme() should succeed', function(done) {
+        var packagePath = path.resolve('.');
+        var readmeFileName = 'README.adoc';
+
+        var result;
+        btools.ConsoleCaptureStart();
+        try {
+            result = btools.CheckReadme(packagePath, readmeFileName, null, true);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        if (result) {
+            assert.fail(`Readme file '${path.join(packagePath, readmeFileName)}' needs to be updated:\n${result}`);
         }
 
         done();

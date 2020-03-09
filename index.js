@@ -1,11 +1,15 @@
+require('colors');
 const cp = require('child_process');
 const os = require('os');
 const fs = require('fs-extra');
 const path = require('path');
 const zlib = require('zlib');
+const diff = require('diff');
 const semver = require('semver');
 const intercept = require("intercept-stdout");
+const genadoc = require(path.join(path.dirname(__filename), 'lib/generate-adoc'));
 
+//#region get npm_version
 const npm_version_latest_using_tar4 = '6.14.2';
 var npm_version = process.env['npm_version'];
 if (npm_version == undefined) {
@@ -18,7 +22,9 @@ if (npm_version == undefined) {
     }
     process.env['npm_version'] = npm_version; // Store this for subsequent calls/reuires.
 }
+//#endregion
 
+//#region require(tar)
 var tar;
 if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
     /**
@@ -48,6 +54,7 @@ if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
 } else {
     tar = require('tar');
 }
+//#endregion
 
 exports.PostPack = function PostPack(clientScripts, verbose, debug) {
     if (verbose) {
@@ -334,6 +341,38 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
     }
 }
 
+exports.CheckReadme = function CheckReadme(packagePath, readmeFileName, lineBreak, updateTimestamp) {
+    var oldReadmeContent = '', newReadmeContent = '';
+    var readmeFile = path.join(packagePath, readmeFileName);
+    if (fs.existsSync(readmeFile)) {
+        oldReadmeContent = fs.readFileSync(readmeFile, { encoding: 'utf8' });
+    }
+
+    try {
+        genadoc.GenerateReadme(packagePath, readmeFileName, null, true);
+    } catch(err) {
+        fs.writeFileSync(readmeFile, oldReadmeContent, { encoding: 'utf8' });
+        throw err;
+    }
+
+    newReadmeContent = fs.readFileSync(readmeFile, { encoding: 'utf8' });
+    if (oldReadmeContent == newReadmeContent) {
+        return '';
+    }
+
+    var changes = [];
+    diff.diffChars(oldReadmeContent, newReadmeContent, { newlineIsToken: true } ).forEach(function(part){
+        changes.push(exports.ColorizeDiff(part, 'green', 'red', 'grey')); // green for additions, red for deletions grey for common parts
+    });
+    return changes.join('');
+}
+
+exports.ColorizeDiff = function ColorizeDiff(diff, addedColor, removedColor, unchangedColor) {
+    if (diff.added) { return diff.value.markWhiteSpace(true)[addedColor]; }
+    if (diff.removed) { return diff.value.markWhiteSpace()[removedColor]; }
+    return diff.value[unchangedColor];
+}
+
 //#region Console Capturing Support
 /**
  * Internal buffer for captured stdout text lines.
@@ -459,6 +498,20 @@ if (String.prototype.toLiteral == null) {
 if (String.prototype.isWhitespace == null) {
     String.prototype.isWhitespace = function () {
         return this.length > 0 && this.replace(/\s/g, '').length < 1;
+    }
+}
+
+if (String.prototype.markWhiteSpace == null) {
+    String.prototype.markWhiteSpace = function (retain) {
+        if (this.isWhitespace()) {
+            if (retain) {
+                return this.toLiteral() + this;
+            } else {
+                return this.toLiteral();
+            }
+        } else {
+            return this;
+        }
     }
 }
 //#endregion
