@@ -4,7 +4,7 @@ npmbuildtools
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
 :Date: 2020-03-09
-:Revision: 1.3.0
+:Revision: 1.4.0
 :License: MIT
 
 - Version {revision}
@@ -83,6 +83,20 @@ we add `check-global.deps` in the `scripts.postinstall` element of `package.json
 `npm` check for those packes and warn us if these packages aren't installed globally, along with a short hint
 on how to install them, respectively.
 
+Automatic Version Update
+~~~~~~~~~~~~~~~~~~~~~~~~
+Publishing to https://www.npmjs.com[npmjs] requires the package version to be unique - if you publish a package
+without having changed the package version in `package.json`, `npm publish` fails because the version already
+exists. Incrementing the package version automatically is tricky because it's hard to determine which release
+type you're dealing with - `major`, `minor`, `package` or others.
+
+One way to overcome this is to increase the package version patch number right *after* publishing from the
+`master` branch. This causes the next pull request to give a hint that the source branch and the `master`
+branch need to be merged first, which provides an opportunity to determine the 'right' or 'best' version change.
+
+The `UpdatePackageVersion()` function in `lib/update-package-version.js` encapsulates the process of reading
+`packge.json`, updating the version number and writing `package.json` back to disk.
+
 Console Capturing
 ~~~~~~~~~~~~~~~~~
 During tests, output from the tested functions are sometimes unwanted. Most of the time, a plain and simple
@@ -149,4 +163,3 @@ describe('your test', function() {
     });
 });
 ----
-

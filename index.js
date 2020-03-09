@@ -189,7 +189,7 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
         console.debug(`Exporting file list from retention copy '${tarPath}'.`);
         fs.writeFileSync(`${bakPath}.list`, packageList.join('\n'));
         console.debug(`Exporting entries JSON from retention copy '${tarPath}'.`);
-        fs.writeFileSync(`${bakPath}.json`, JSON.stringify(packageListBin, null, 4));
+        fs.writeJSONSync(`${bakPath}.json`, packageListBin, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
     }
     fs.removeSync(tarPath);
     if (fs.existsSync(tarPath)) {
@@ -270,7 +270,7 @@ exports.PostPack = function PostPack(clientScripts, verbose, debug) {
         console.debug(`Exporting file list from compression buffer '${tarPath}'.`);
         fs.writeFileSync(`${tarPath}.list`, tarList.join('\n'));
         console.debug(`Exporting entries JSON from compression buffer '${tarPath}'.`);
-        fs.writeFileSync(`${tarPath}.json`, JSON.stringify(tarListBin, null, 4));
+        fs.writeJSONSync(`${tarPath}.json`, tarListBin, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
     } else {
         fs.removeSync(tarPath);
         if (fs.existsSync(tarPath)) {
@@ -553,7 +553,7 @@ function defineReadOnlyProperty(p, enumerable, getter) {
  * ---
  * Albeit all read-only properties added with `defineReadOnlyProperty()`
  * have their `enumerable` attribute set to `false` (to avoid them 
- * being serialized e.g. throuch `JSON.stringyfy()`), their names can
+ * being serialized e.g. throuch `JSON.stringify()`), their names can
  * be obtained through this property.
  * @type {string[]}
  */

@@ -28,3 +28,6 @@ jobs:
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+      - name: Increment Package Version
+        run: node -e "require('./lib/update-package-version').UpdatePackageVersion('.', 'patch')"
+      - run: git status

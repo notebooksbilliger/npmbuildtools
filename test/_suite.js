@@ -1,3 +1,4 @@
+const os = require('os');
 const fs = require('fs-extra');
 const path = require('path');
 const assert = require('assert');
@@ -292,7 +293,7 @@ describe(`${thisPackage.name} CleanPackage() tests`, function () {
         var tempPackageFile = path.resolve(`./test/package.json`);
         var tempElements = [ 'scripts.test', 'scripts.prepublish' ];
 
-        fs.writeJSONSync(tempPackageFile, thisPackage, { spaces: 4 });
+        fs.writeJSONSync(tempPackageFile, thisPackage, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
         btools.ConsoleCaptureStart();
         try {
             cleanpackage.CleanPackageElements(`./test`, ...tempElements);
@@ -328,6 +329,62 @@ describe(`${thisPackage.name} CheckGlobalDeps() tests`, function () {
             btools.ConsoleCaptureStop();
             throw err;
         }
+
+        done();
+    });
+});
+
+describe(`${thisPackage.name} UpdatePackageVersion() tests`, function () {
+    var updatepackage = require('../lib/update-package-version');
+
+    it('should fail with invalid file spec', function(done) {
+        btools.ConsoleCaptureStart();
+        try {
+            updatepackage.UpdatePackageVersion();
+            assert.fail('should have failed');
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `Parameter 'packagePath' is mandatory.`, `Error message should be`)
+        }
+
+        done();
+    });
+
+    it('should fail with invalid release type', function(done) {
+        btools.ConsoleCaptureStart();
+        try {
+            updatepackage.UpdatePackageVersion('fakePath');
+            assert.fail('should have failed');
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `Parameter 'releaseType' is mandatory.`, `Error message should be`)
+        }
+
+        done();
+    });
+
+    it('should succeed with temporary package file', function(done) {
+        var tempPackageFile = path.resolve(`./test/package.json`);
+        var tempReleaseType = 'patch';
+
+        fs.writeJSONSync(tempPackageFile, thisPackage, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
+        btools.ConsoleCaptureStart();
+        try {
+            updatepackage.UpdatePackageVersion(`./test`, tempReleaseType);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        } finally {
+            fs.removeSync(tempPackageFile);
+        }
+
+        assert.equal(btools.stdout.length, 2, `stdout should contain exact number of lines`);
+        assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Updating version of package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
+        assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Successfully updated ${tempReleaseType} of version from [${thisPackage['version']}] to [${require('semver').inc(thisPackage['version'], tempReleaseType)}] in '${tempPackageFile}'.\n`, `stdout second line should contain`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
 
         done();
     });
