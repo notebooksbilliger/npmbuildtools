@@ -31,3 +31,7 @@ jobs:
       - name: Increment Package Version
         run: node -e "require('./lib/update-package-version').UpdatePackageVersion('.', 'patch')"
       - run: git status
+      - run: git add "package.json"
+      - run: git status
+      - run: git commit -m "Automatic version patch increment after publish"
+      - run: git status
