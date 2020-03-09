@@ -26,6 +26,7 @@
     "test": "./test"
   },
   "dependencies": {
+    "diff": "^4.0.2",
     "colors": "^1.4.0",
     "fs-extra": "^8.1.0",
     "intercept-stdout": "^0.1.2",
@@ -34,7 +35,6 @@
     "tar4": "npm:tar@^4.4.13"
   },
   "devDependencies": {
-    "diff": "^4.0.2",
     "mocha": "^7.1.0"
   }
 }
