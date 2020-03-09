@@ -23,7 +23,6 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
         btools.ConsoleCaptureStart();
         try {
             result = vc.GetLastChange('');
-            btools.ConsoleCaptureStop();
             assert.fail(`should have failed`);
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -99,8 +98,13 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         var fakePath = 'fakePath';
 
         btools.ConsoleCaptureStart();
-        genadoc.ResolveIncludes(fakeRoot, `include::${fakePath}[]include::${fakePath}[]`);
-        btools.ConsoleCaptureStop();
+        try {
+            genadoc.ResolveIncludes(fakeRoot, `include::${fakePath}[]include::${fakePath}[]`);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
         assert.equal(btools.stderr.length, 2, `stderr should contain exact number of lines`);
@@ -116,7 +120,6 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         btools.ConsoleCaptureStart();
         try {
             result = genadoc.GetAttribute();
-            btools.ConsoleCaptureStop();
             assert.fail(`should have failed`);
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -136,7 +139,6 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         btools.ConsoleCaptureStart();
         try {
             result = genadoc.GetAttribute(attributeName, ...inputLines);
-            btools.ConsoleCaptureStop();
             assert.fail(`should have failed`);
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -154,9 +156,14 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         var inputLines = [];
 
         btools.ConsoleCaptureStart();
-        result = genadoc.GetAttribute('');
-        result = genadoc.GetAttribute('', ...inputLines);
-        btools.ConsoleCaptureStop();
+        try {
+            result = genadoc.GetAttribute('');
+            result = genadoc.GetAttribute('', ...inputLines);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
@@ -164,8 +171,13 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
 
 
         btools.ConsoleCaptureStart();
-        result = genadoc.GetAttribute(attributeName, ...inputLines);
-        btools.ConsoleCaptureStop();
+        try {
+            result = genadoc.GetAttribute(attributeName, ...inputLines);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
@@ -174,8 +186,13 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
 
         inputLines = [ `:${attributeName}:` ];
         btools.ConsoleCaptureStart();
-        result = genadoc.GetAttribute(attributeName, ...inputLines);
-        btools.ConsoleCaptureStop();
+        try {
+            result = genadoc.GetAttribute(attributeName, ...inputLines);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
@@ -184,8 +201,13 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         
         inputLines = [ `:${attributeName}: ` ];
         btools.ConsoleCaptureStart();
-        result = genadoc.GetAttribute(attributeName, ...inputLines);
-        btools.ConsoleCaptureStop();
+        try {
+            result = genadoc.GetAttribute(attributeName, ...inputLines);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
@@ -223,7 +245,7 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         if (oldReadmeContent != newReadmeContent) {
             function markWhiteSpace(text) {
                 if (text.isWhitespace()) {
-                    return text.toLiteral();
+                    return text.toLiteral() + text;
                 } else {
                     return text;
                 }
@@ -261,8 +283,13 @@ describe(`${thisPackage.name} PostPack() tests`, function () {
         assert.ok(!fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should not exist`);
 
         btools.ConsoleCaptureStart();
-        btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], true, btools.DebugMode);
-        btools.ConsoleCaptureStop();
+        try {
+            btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], true, btools.DebugMode);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
@@ -285,9 +312,15 @@ describe(`${thisPackage.name} CleanPackage() tests`, function () {
 
         fs.writeJSONSync(tempPackageFile, thisPackage, { spaces: 4 });
         btools.ConsoleCaptureStart();
-        cleanpackage.CleanPackageElements(`./test`, ...tempElements);
-        btools.ConsoleCaptureStop();
-        fs.removeSync(tempPackageFile);
+        try {
+            cleanpackage.CleanPackageElements(`./test`, ...tempElements);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        } finally {
+            fs.removeSync(tempPackageFile);
+        }
 
         assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines`);
         assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Cleaning up package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
@@ -305,9 +338,14 @@ describe(`${thisPackage.name} CheckGlobalDeps() tests`, function () {
         var checkglobaldeps = require('../lib/check-global-deps');
 
         btools.ConsoleCaptureStart();
-        checkglobaldeps.CheckGlobalDeps('npm', 'npm');
-        checkglobaldeps.CheckGlobalDeps('fakePackage');
-        btools.ConsoleCaptureStop();
+        try {
+            checkglobaldeps.CheckGlobalDeps('npm', 'npm');
+            checkglobaldeps.CheckGlobalDeps('fakePackage');
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
         done();
     });

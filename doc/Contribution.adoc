@@ -1,0 +1,13 @@
+= Contributing
+
+Contributors are always welcome!
+
+Please consider that this project has been initiated by a beginner, so every input, recommendation or
+correction is highly aprreciated.
+
+ToDos
+-----
+- Write some developer guidance.
+- Remove the custom code for text coloring from PostPack() due to module `colors` now being included anyway.
+- Add support for automatic versioning on publish.
+- Make Resolve() in `generate-adoc.js` agjust `link:` directives (i.e. let the author link to subpaths as needed to test and afterwards adjust the link subpath, if needed).
