@@ -349,9 +349,11 @@ exports.CheckReadme = function CheckReadme(packagePath, readmeFileName, lineBrea
     }
 
     try {
-        genadoc.GenerateReadme(packagePath, readmeFileName, null, true);
+        genadoc.GenerateReadme(packagePath, readmeFileName, lineBreak, updateTimestamp);
     } catch(err) {
-        fs.writeFileSync(readmeFile, oldReadmeContent, { encoding: 'utf8' });
+        if (oldReadmeContent) {
+            fs.writeFileSync(readmeFile, oldReadmeContent, { encoding: 'utf8' });
+        }
         throw err;
     }
 
