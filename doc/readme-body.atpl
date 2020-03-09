@@ -57,6 +57,20 @@ we add `check-global.deps` in the `scripts.postinstall` element of `package.json
 `npm` check for those packes and warn us if these packages aren't installed globally, along with a short hint
 on how to install them, respectively.
 
+Automatic Version Update
+~~~~~~~~~~~~~~~~~~~~~~~~
+Publishing to https://www.npmjs.com[npmjs] requires the package version to be unique - if you publish a package
+without having changed the package version in `package.json`, `npm publish` fails because the version already
+exists. Incrementing the package version automatically is tricky because it's hard to determine which release
+type you're dealing with - `major`, `minor`, `package` or others.
+
+One way to overcome this is to increase the package version patch number right *after* publishing from the
+`master` branch. This causes the next pull request to give a hint that the source branch and the `master`
+branch need to be merged first, which provides an opportunity to determine the 'right' or 'best' version change.
+
+The `UpdatePackageVersion()` function in `lib/update-package-version.js` encapsulates the process of reading
+`packge.json`, updating the version number and writing `package.json` back to disk.
+
 Console Capturing
 ~~~~~~~~~~~~~~~~~
 During tests, output from the tested functions are sometimes unwanted. Most of the time, a plain and simple
@@ -79,48 +93,12 @@ while using mocha for unit testing and are most promising to get everything righ
 If you expect a function to fail, use the classic pattern and place the capture support function accordingly:
 [source,javascript]
 ----
-const btools = require('@nbb.com/npmbuildtools');
-
-describe('your test', function() {
-    it('should fail', function(done) {
-
-        btools.ConsoleCaptureStart();  // start capturing
-        try {
-            functionToTest(); // call the function you expect to fail
-            assert.fail(`should have failed`); // if it unexpectedly succeeds, fail on your own
-            // do NOT stop capturing here because the `catch` block will be called anyway!
-        } catch(err) {
-            btools.ConsoleCaptureStop(); // stop capturing before doing anything else
-            // do your asserts here
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `expected message`, `Error message should be`)
-        }
-        
-        done();
-    });
-});
+include::example.test-fail.js[]
 ----
 
 If you expect a function to succeed, you also have to use the classic 'fail' pattern because if the function
 fails unexpectedly, or even crashed the whole test run, you wouldn't get aware of it:
 [source,javascript]
 ----
-const btools = require('@nbb.com/npmbuildtools');
-
-describe('your test', function() {
-    it('should succeed', function(done) {
-        
-        btools.ConsoleCaptureStart();  // start capturing
-        try {
-            functionToTest(); // call the function you expect to fail
-            btools.ConsoleCaptureStop(); // stop capturing regularly because the `catch` block won't be called
-        } catch(err) {
-            btools.ConsoleCaptureStop(); // stop capturing before doing anything else
-            throw err; // now throw the error
-        }
-        
-        done();
-    });
-});
+include::example.test-succeed.js[]
 ----
-
