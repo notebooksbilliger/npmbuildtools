@@ -14,57 +14,62 @@ btools.ReadOnlyProperties.forEach(prop => {
 
 console.log('\nRunning Mocha Test Suite ...');
 
-describe(`${thisPackage.name} PostPack() tests`, function () {
-    it('should succeed', function(done) {
+describe(`${thisPackage.name} vc-utils tests`, function () {
+    var vc = require('../lib/vc-utils');
 
-        var npmTarballEnv = 'NPM_TARBALL';
-        if (process.env[npmTarballEnv] != undefined) {
-            delete process.env[npmTarballEnv];
-        }
-        assert.ok(process.env[npmTarballEnv] == undefined);
-
-        var npmTarballFile = path.resolve('.', npmTarballEnv);
-        if (fs.existsSync(npmTarballFile)) {
-            fs.removeSync(npmTarballFile);
-        }
-        assert.ok(!fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should not exist`);
+    it('GetLastChange() should fail with faulty path specification', function(done) {
+        var result;
 
         btools.ConsoleCaptureStart();
-        btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], true, btools.DebugMode);
-        btools.ConsoleCaptureStop();
-
-        assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
-        assert.ok((process.env[npmTarballEnv] != undefined), `Environment variable '${npmTarballEnv}' should exist`);
-        assert.ok(fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should exist`);
-        assert.equal(fs.readFileSync(npmTarballFile, { encoding: 'utf8' }), process.env[npmTarballEnv], `Environment variable '${npmTarballEnv}' value should equal content of file '${npmTarballFile}'`);
-
-        delete process.env[npmTarballEnv];
-        fs.removeSync(npmTarballFile);
+        try {
+            result = vc.GetLastChange('');
+            btools.ConsoleCaptureStop();
+            assert.fail(`should have failed`);
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `'' is not a valid path specification for parameter 'pathSpec'.`, `Error message should be`)
+            assert.equal(result, undefined, `Variable 'result' should have exact value`);
+        }
 
         done();
     });
-});
 
-describe(`${thisPackage.name} CleanPackage() tests`, function () {
-    it('should succeed with temporary package file', function(done) {
-        var cleanpackage = require('../lib/clean-package-elements');
-        var tempPackageFile = path.resolve(`./test/package.json`);
-        var tempElements = [ 'scripts.test', 'scripts.prepublish' ];
+    it('GetLastChange() should return NaN with unknown or untracked path specification', function(done) {
+        var result;
 
-        fs.writeJSONSync(tempPackageFile, thisPackage, { spaces: 4 });
         btools.ConsoleCaptureStart();
-        cleanpackage.CleanPackageElements(`./test`, ...tempElements);
-        btools.ConsoleCaptureStop();
-        fs.removeSync(tempPackageFile);
+        try {
+            result = vc.GetLastChange(path.resolve('fakefile'));
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
 
-        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines`);
-        assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Cleaning up package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
-        assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Removing element '${tempElements[0]}'.\n`, `stdout second line should contain`);
-        assert.equal(btools.stdout[2], `npm \u001b[34mnotice\u001b[0m Element '${tempElements[1]}' doesn't exist.\n`, `stdout third  line should contain`);
-        assert.equal(btools.stdout[3], `npm \u001b[34mnotice\u001b[0m Successfully cleaned up '${tempPackageFile}'.\n`, `stdout fourth line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stderr.toString()}`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
+        assert.ok(isNaN(result), `Variable 'result' should be NaN`);
 
+        done();
+    });
+
+    it('GetLastChange() should succeed otherwise', function(done) {
+        var result;
+
+        btools.ConsoleCaptureStart();
+        try {
+            result = vc.GetLastChange(path.resolve('.'));
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stderr.toString()}`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
+        assert.ok(!isNaN(result), `Variable 'result' should not be NaN`);
+        assert.equal(typeof(result), 'number', `Variable 'result' should have exact type`);
         done();
     });
 });
@@ -189,80 +194,6 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         done();
     });
 
-    it('GetLastCommitTimestamp() should fail with faulty path specification', function(done) {
-        var result;
-
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetLastCommitTimestamp('');
-            btools.ConsoleCaptureStop();
-            assert.fail(`should have failed`);
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `'' is not a valid path specification for parameter 'path'.`, `Error message should be`)
-            assert.equal(result, undefined, `Variable 'result' should have exact value`);
-        }
-
-        done();
-    });
-
-    it('GetLastCommitTimestamp() should fail with erroneous command', function(done) {
-        var result;
-        var fakeCommand = 123;
-
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetLastCommitTimestamp('fakeFileName', fakeCommand);
-            assert.fail(`should have failed`);
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `Command failed: git ${fakeCommand}\ngit: '${fakeCommand}' is not a git command. See 'git --help'.\n`, `Error message should be`)
-            assert.equal(result, undefined, `Variable 'result' should have exact value`);
-        }
-
-        done();
-    });
-
-    it('GetLastCommitTimestamp() should return NaN with unknown or untracked path specification', function(done) {
-        var result;
-
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetLastCommitTimestamp(path.resolve('fakefile'));
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
-
-        assert.equal(btools.stdout.length, btools.DebugMode ? 1 : 0, `stdout shouldn't contain any lines:\n${btools.stderr.toString()}`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
-        assert.ok(isNaN(result), `Variable 'result' should be NaN`);
-
-        done();
-    });
-
-    it('GetLastCommitTimestamp() should succeed otherwise', function(done) {
-        var result;
-
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetLastCommitTimestamp(path.resolve('.'));
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
-
-        assert.equal(btools.stdout.length, btools.DebugMode ? 1 : 0, `stdout shouldn't contain any lines:\n${btools.stderr.toString()}`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
-        assert.ok(!isNaN(result), `Variable 'result' should not be NaN`);
-        assert.equal(typeof(result), 'number', `Variable 'result' should have exact type`);
-        done();
-    });
-
     it('GenerateReadme() should succeed', function(done) {
         var packagePath = path.resolve('.');
         var readmeFileName = 'README.adoc';
@@ -283,7 +214,7 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         }
 
         assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
-        assert.equal(btools.stdout.length, btools.DebugMode ? 4 : 2, `stdout should contain exact number of lines:\n${btools.stderr.toString()}`);
+        assert.equal(btools.stdout.length, 7, `stdout should contain exact number of lines:\n${btools.stderr.toString()}`);
         assert.equal(btools.stdout[0], `Creating/Updating file '${readmeFileName}'.\n`, `stdout first  line should contain`);
         assert.equal(btools.stdout[btools.stdout.length - 1], `Successfully updated file '${readmeFile}'.\n`, `stdout second line should contain`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
@@ -309,6 +240,61 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
             });
             assert.fail(`Readme file '${readmeFile}' needs to be updated:\n${changes.join('')}`);
         }
+
+        done();
+    });
+});
+
+describe(`${thisPackage.name} PostPack() tests`, function () {
+    it('should succeed', function(done) {
+
+        var npmTarballEnv = 'NPM_TARBALL';
+        if (process.env[npmTarballEnv] != undefined) {
+            delete process.env[npmTarballEnv];
+        }
+        assert.ok(process.env[npmTarballEnv] == undefined);
+
+        var npmTarballFile = path.resolve('.', npmTarballEnv);
+        if (fs.existsSync(npmTarballFile)) {
+            fs.removeSync(npmTarballFile);
+        }
+        assert.ok(!fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should not exist`);
+
+        btools.ConsoleCaptureStart();
+        btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], true, btools.DebugMode);
+        btools.ConsoleCaptureStop();
+
+        assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
+        assert.ok((process.env[npmTarballEnv] != undefined), `Environment variable '${npmTarballEnv}' should exist`);
+        assert.ok(fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should exist`);
+        assert.equal(fs.readFileSync(npmTarballFile, { encoding: 'utf8' }), process.env[npmTarballEnv], `Environment variable '${npmTarballEnv}' value should equal content of file '${npmTarballFile}'`);
+
+        delete process.env[npmTarballEnv];
+        fs.removeSync(npmTarballFile);
+
+        done();
+    });
+});
+
+describe(`${thisPackage.name} CleanPackage() tests`, function () {
+    it('should succeed with temporary package file', function(done) {
+        var cleanpackage = require('../lib/clean-package-elements');
+        var tempPackageFile = path.resolve(`./test/package.json`);
+        var tempElements = [ 'scripts.test', 'scripts.prepublish' ];
+
+        fs.writeJSONSync(tempPackageFile, thisPackage, { spaces: 4 });
+        btools.ConsoleCaptureStart();
+        cleanpackage.CleanPackageElements(`./test`, ...tempElements);
+        btools.ConsoleCaptureStop();
+        fs.removeSync(tempPackageFile);
+
+        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines`);
+        assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Cleaning up package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
+        assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Removing element '${tempElements[0]}'.\n`, `stdout second line should contain`);
+        assert.equal(btools.stdout[2], `npm \u001b[34mnotice\u001b[0m Element '${tempElements[1]}' doesn't exist.\n`, `stdout third  line should contain`);
+        assert.equal(btools.stdout[3], `npm \u001b[34mnotice\u001b[0m Successfully cleaned up '${tempPackageFile}'.\n`, `stdout fourth line should contain`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
 
         done();
     });
