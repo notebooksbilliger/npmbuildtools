@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
       "postpack": "node -e \"require('buildtools').PostPack([ [ './node_modules/@nbb.com/buildtools/lib/clean-package-elements', 'scripts.postpack', 'directories.test' ] ])\"",
-      "postinstall": "node ./node_modules/@nbb.com/buildtools/lib/check-global-deps npm typescript"
+      "postinstall": "node ./node_modules/@nbb.com/npmbuildtools/lib/check-global-deps npm typescript"
     },
     "directories": {
         "test": "./test"
