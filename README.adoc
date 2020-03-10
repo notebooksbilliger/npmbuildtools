@@ -4,7 +4,7 @@ npmbuildtools
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
 :Date: 2020-03-09
-:Revision: 1.4.1
+:Revision: 2.0.0
 :License: MIT
 
 - Version {revision}
@@ -30,7 +30,7 @@ Specify the tools in the `scripts` section of the `package.json` package file, l
     "description": "Example package",
     "main": "index.js",
     "scripts": {
-      "postpack": "node -e \"require('@nbb.com/npmbuildtools').PostPack([ [ './node_modules/@nbb.com/npmbuildtools/lib/clean-package-elements', 'scripts.postpack', 'directories.test' ] ])\"",
+      "postpack": "node -e \"require('@nbb.com/npmbuildtools').PostPack([ [ './node_modules/@nbb.com/npmbuildtools/lib/clean-package-elements', 'scripts.postpack', 'directories.test' ] ], { verbose: true })\"",
       "postinstall": "node -e \"require('@nbb.com/npmbuildtools/lib/check-global-deps').CheckGlobalDeps(['typescript'])\""
     },
     "directories": {
