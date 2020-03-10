@@ -47,8 +47,8 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
             throw err;
         }
 
-        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stderr.toString()}`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
+        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
         assert.ok(isNaN(result), `Variable 'result' should be NaN`);
 
         done();
@@ -66,8 +66,8 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
             throw err;
         }
 
-        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stderr.toString()}`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
+        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
         assert.ok(!isNaN(result), `Variable 'result' should not be NaN`);
         assert.equal(typeof(result), 'number', `Variable 'result' should have exact type`);
         done();
@@ -107,8 +107,8 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
             throw err;
         }
 
-        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
-        assert.equal(btools.stderr.length, 2, `stderr should contain exact number of lines`);
+        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines:\n${btools.stdout.join('')}`);
+        assert.equal(btools.stderr.length, 2, `stderr should contain exact number of lines:\n${btools.stderr.join('')}`);
         assert.equal(btools.stderr[0], `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.\n`, `stderr first  line should contain`);
         assert.equal(btools.stderr[1], `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.\n`, `stderr second line should contain`);
 
@@ -166,8 +166,8 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
             throw err;
         }
 
-        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines:\n${btools.stdout.join('')}`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
         assert.equal(result, undefined, `Variable 'result' should have exact value`);
 
 
@@ -241,10 +241,10 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         }
 
         assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
-        assert.equal(btools.stdout.length, 7, `stdout should contain exact number of lines:\n${btools.stdout.toString()}`);
+        assert.equal(btools.stdout.length, 7, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
         assert.equal(btools.stdout[0], `Creating/Updating file '${readmeFileName}'.\n`, `stdout first  line should contain`);
-        assert.equal(btools.stdout[btools.stdout.length - 1], `Successfully updated file '${readmeFile}'.\n`, `stdout second line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.toString()}`);
+        assert.equal(btools.stdout[btools.stdout.length - 1], `Successfully updated readme file '${readmeFile}'.\n`, `stdout second line should contain`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
 
         done();
     });
@@ -275,7 +275,7 @@ describe(`${thisPackage.name} PostPack() tests`, function () {
         }
 
         assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
         assert.ok((process.env[npmTarballEnv] != undefined), `Environment variable '${npmTarballEnv}' should exist`);
         assert.ok(fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should exist`);
         assert.equal(fs.readFileSync(npmTarballFile, { encoding: 'utf8' }), process.env[npmTarballEnv], `Environment variable '${npmTarballEnv}' value should equal content of file '${npmTarballFile}'`);
@@ -305,12 +305,12 @@ describe(`${thisPackage.name} CleanPackage() tests`, function () {
             fs.removeSync(tempPackageFile);
         }
 
-        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines`);
+        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
         assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Cleaning up package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
         assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Removing element '${tempElements[0]}'.\n`, `stdout second line should contain`);
         assert.equal(btools.stdout[2], `npm \u001b[34mnotice\u001b[0m Element '${tempElements[1]}' doesn't exist.\n`, `stdout third  line should contain`);
         assert.equal(btools.stdout[3], `npm \u001b[34mnotice\u001b[0m Successfully cleaned up '${tempPackageFile}'.\n`, `stdout fourth line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
 
         done();
     });
@@ -381,10 +381,10 @@ describe(`${thisPackage.name} UpdatePackageVersion() tests`, function () {
             fs.removeSync(tempPackageFile);
         }
 
-        assert.equal(btools.stdout.length, 2, `stdout should contain exact number of lines`);
+        assert.equal(btools.stdout.length, 2, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
         assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Updating version of package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
         assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Successfully updated ${tempReleaseType} of version from [${thisPackage['version']}] to [${require('semver').inc(thisPackage['version'], tempReleaseType)}] in '${tempPackageFile}'.\n`, `stdout second line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
 
         done();
     });
