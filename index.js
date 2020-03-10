@@ -56,7 +56,24 @@ if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
 }
 //#endregion
 
-exports.PostPack = function PostPack(clientScripts, verbose, debug) {
+exports.PostPackOptions = class PostPackOptions {
+    construstor() {
+        this.verbose = false;
+        this.debug = false;
+    }
+}
+
+/**
+ * @param {string[]} clientScripts An array of node commands to run on the package directory
+ * @param {PostPackOptions=} options A `PostPackOptions` object
+ */
+exports.PostPack = function PostPack(clientScripts, options) {
+    if (!options) {
+        options = new exports.PostPackOptions();
+    }
+    var verbose = options.verbose;
+    var debug = options.debug;
+
     if (verbose) {
         console.info = (message) => { console.log(`npm \u001b[34mnotice\u001b[0m ${message}`) };
     } else {
@@ -341,7 +358,12 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
     }
 }
 
-exports.CheckReadme = function CheckReadme(packagePath, readmeFileName, lineBreak, updateTimestamp) {
+/**
+ * @param {string=} packagePath Defaults to `.`
+ * @param {string=} readmeFileName Defaults to `README.adoc`
+ * @param {GenerateReadmeOptions=} options A `GenerateReadmeOptions` object
+ */
+exports.CheckReadme = function CheckReadme(packagePath, readmeFileName, options) {
     var oldReadmeContent = '', newReadmeContent = '';
     var readmeFile = path.join(packagePath, readmeFileName);
     if (fs.existsSync(readmeFile)) {
@@ -349,7 +371,7 @@ exports.CheckReadme = function CheckReadme(packagePath, readmeFileName, lineBrea
     }
 
     try {
-        genadoc.GenerateReadme(packagePath, readmeFileName, lineBreak, updateTimestamp);
+        genadoc.GenerateReadme(packagePath, readmeFileName, options);
     } catch(err) {
         if (oldReadmeContent) {
             fs.writeFileSync(readmeFile, oldReadmeContent, { encoding: 'utf8' });

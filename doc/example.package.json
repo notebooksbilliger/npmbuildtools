@@ -4,8 +4,8 @@
     "description": "Example package",
     "main": "index.js",
     "scripts": {
-      "postpack": "node -e \"require('@nbb.com/npmbuildtools').PostPack([ [ './node_modules/@nbb.com/npmbuildtools/lib/clean-package-elements', 'scripts.postpack', 'directories.test' ] ])\"",
-      "postinstall": "node ./node_modules/@nbb.com/npmbuildtools/lib/check-global-deps npm typescript"
+      "postpack": "node -e \"require('@nbb.com/npmbuildtools').PostPack([ [ './node_modules/@nbb.com/npmbuildtools/lib/clean-package-elements', 'scripts.postpack', 'directories.test' ], [ './node_modules/@nbb.com/npmbuildtools/lib/create-fallback-readme' ] ], { verbose: true })\"",
+      "postinstall": "node -e \"require('@nbb.com/npmbuildtools/lib/check-global-deps').CheckGlobalDeps(['typescript'])\""
     },
     "directories": {
         "test": "./test"

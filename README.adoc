@@ -3,14 +3,21 @@ npmbuildtools
 :Author: Thorben Wolkersdorfer
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
-:Date: 2020-03-09
-:Revision: 1.4.0
+:Date: 2020-03-10
+:Revision: 2.0.0
 :License: MIT
 
 - Version {revision}
 - Licensed under the {license} license.
 
 Tools for use with npm package management.
+
+Installation
+------------
+[source,bash]
+----
+npm install "@nbb.com/npmbuildtools"
+----
 
 Usage
 -----
@@ -23,8 +30,8 @@ Specify the tools in the `scripts` section of the `package.json` package file, l
     "description": "Example package",
     "main": "index.js",
     "scripts": {
-      "postpack": "node -e \"require('@nbb.com/npmbuildtools').PostPack([ [ './node_modules/@nbb.com/npmbuildtools/lib/clean-package-elements', 'scripts.postpack', 'directories.test' ] ])\"",
-      "postinstall": "node ./node_modules/@nbb.com/npmbuildtools/lib/check-global-deps npm typescript"
+      "postpack": "node -e \"require('@nbb.com/npmbuildtools').PostPack([ [ './node_modules/@nbb.com/npmbuildtools/lib/clean-package-elements', 'scripts.postpack', 'directories.test' ], [ './node_modules/@nbb.com/npmbuildtools/lib/create-fallback-readme' ] ], { verbose: true })\"",
+      "postinstall": "node -e \"require('@nbb.com/npmbuildtools/lib/check-global-deps').CheckGlobalDeps(['typescript'])\""
     },
     "directories": {
         "test": "./test"
@@ -96,6 +103,16 @@ branch need to be merged first, which provides an opportunity to determine the '
 
 The `UpdatePackageVersion()` function in `lib/update-package-version.js` encapsulates the process of reading
 `packge.json`, updating the version number and writing `package.json` back to disk.
+
+Fallback Readme Creation
+~~~~~~~~~~~~~~~~~~~~~~~~
+In https://www.npmjs.com[npmjs], there's no support for rendering AsciiDoc README files, and setting the
+"readme" element in `package.json` also has no effect (to see it in raw format at least).
+
+The `CreateFallbackReadme()` function in `lib/create-fallback-readme.js` creates a fallback `README.md`
+file and can be called as a script in `PostPack()`, which will inject this file in the packge to be
+published while not having it in project itself. See how to use it in conjuction with `PostPack()` in the
+<<Usage>> example `package.json` .
 
 Console Capturing
 ~~~~~~~~~~~~~~~~~

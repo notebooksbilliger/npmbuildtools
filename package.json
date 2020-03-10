@@ -1,11 +1,11 @@
 {
     "name": "@nbb.com/npmbuildtools",
-    "version": "1.4.0",
+    "version": "2.0.0",
     "description": "Tools for use with npm package management.",
     "main": "index.js",
     "scripts": {
         "test": "node ./node_modules/mocha/bin/_mocha --timeout 999999 --colors ./test/_suite.js",
-        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.test', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ] ], true)\"",
+        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.test', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { verbose: true })\"",
         "prepublishOnly": "node -e \"require('./lib/generate-adoc').GenerateReadme()\""
     },
     "keywords": [
