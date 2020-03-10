@@ -316,6 +316,39 @@ describe(`${thisPackage.name} CleanPackage() tests`, function () {
     });
 });
 
+describe(`${thisPackage.name} CreateFallbackReadme() tests`, function () {
+    it('should succeed', function(done) {
+        var crtfbreadme = require('../lib/create-fallback-readme');
+        var tempReadmeFile = path.resolve(`./test/README.md`);
+        if (fs.existsSync(tempReadmeFile)) {
+            fs.removeSync(tempReadmeFile);
+        }
+
+        btools.ConsoleCaptureStart();
+        try {
+            crtfbreadme.CreateFallbackReadme(`./test`);
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            if (fs.existsSync(tempReadmeFile)) {
+                fs.removeSync(tempReadmeFile);
+            }
+            throw err;
+        }
+
+        assert.ok(fs.existsSync(tempReadmeFile), `File ${tempReadmeFile} should exist`);
+        fs.removeSync(tempReadmeFile);
+        assert.ok(!fs.existsSync(tempReadmeFile), `File ${tempReadmeFile} should have been deleted`);
+
+        assert.equal(btools.stdout.length, 2, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
+        assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Creating readme file '${tempReadmeFile}'.\n`, `stdout first  line should contain`);
+        assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Successfully created '${tempReadmeFile}'.\n`, `stdout second line should contain`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
+
+        done();
+    });
+});
+
 describe(`${thisPackage.name} CheckGlobalDeps() tests`, function () {
     it('should succeed with simple as well as spread syntax', function(done) {
         var checkglobaldeps = require('../lib/check-global-deps');

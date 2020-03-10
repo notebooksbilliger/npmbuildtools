@@ -14,7 +14,6 @@ ToDos
 - Document `vc-utils`
 - Isolate and document **string extensions**
 - Mention Visual Studio Code related items (`--debug-vscode`, `launch.json`, `settings.json`)
-- Create script to say 'sorry no asciidoc rendering here in npm please visit github'
 - Remove the custom code for text coloring from PostPack() due to module `colors` now being included anyway.
 - Find a smarter way to control verbose and debug output in `PostPack()` (ideally global handling of prefixes to fit output features in GitHub Actions as well as in Azure Runbooks).
 - Make Resolve() in `generate-adoc.js` agjust `link:` directives (i.e. let the author link to subpaths as needed to test and afterwards adjust the link subpath, if needed).
