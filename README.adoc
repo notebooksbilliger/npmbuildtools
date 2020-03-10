@@ -12,6 +12,13 @@ npmbuildtools
 
 Tools for use with npm package management.
 
+Installation
+------------
+[source,bash]
+----
+npm install "@nbb.com/npmbuildtools"
+----
+
 Usage
 -----
 Specify the tools in the `scripts` section of the `package.json` package file, like so:
