@@ -6,7 +6,7 @@ const path = require('path');
 const zlib = require('zlib');
 const diff = require('diff');
 const semver = require('semver');
-const intercept = require("intercept-stdout");
+const intercept = require('intercept-stdout');
 const genadoc = require(path.join(path.dirname(__filename), 'lib/generate-adoc'));
 
 //#region get npm_version
@@ -56,20 +56,14 @@ if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
 }
 //#endregion
 
-exports.PostPackOptions = class PostPackOptions {
-    construstor() {
-        this.verbose = false;
-        this.debug = false;
-    }
-}
-
 /**
- * @param {string[]} clientScripts An array of node commands to run on the package directory
+ * @typedef { { verbose: boolean, debug: boolean} } PostPackOptions
+ * @param {string[][]} clientScripts An array of node commands to run on the package directory
  * @param {PostPackOptions=} options A `PostPackOptions` object
  */
 exports.PostPack = function PostPack(clientScripts, options) {
     if (!options) {
-        options = new exports.PostPackOptions();
+        options = { verbose: false, debug: false };
     }
     var verbose = options.verbose;
     var debug = options.debug;
@@ -159,7 +153,7 @@ exports.PostPack = function PostPack(clientScripts, options) {
         console.info(`Created working folder '${wrkDir}'.`);
     }
 
-    var tmpDir = fs.ensureDirSync(`${wrkDir}-temp`);
+    var tmpDir = `${fs.ensureDirSync(`${wrkDir}-temp`)}`;
     if (!fs.existsSync(tmpDir)) {
         throw Error(`Failed to create temporary folder '${tmpDir}'.`);
     } else {
@@ -263,9 +257,9 @@ exports.PostPack = function PostPack(clientScripts, options) {
     });
     tar.create({ file: tarPath, cwd: wrkDir, prefix: prefix, portable: true, mtime: new Date('1985-10-26T08:15:00.000Z'), sync: true }, fileList);
     console.info(`Created compression buffer '${tarPath}' from source folder '${wrkDir}'.`);
-    var tarBuf = fs.readFileSync(tarPath);
+    tarBuf = fs.readFileSync(tarPath);
     console.info(`Read ${tarBuf.length} bytes from compression buffer '${tarPath}'.`);
-    var tgzBuf = zlib.gzipSync(tarBuf);
+    tgzBuf = zlib.gzipSync(tarBuf);
     console.info(`Compressed to ${tgzBuf.length} bytes from compression buffer '${tarPath}'.`);
     fs.writeFileSync(tgzPath, tgzBuf);
     console.info(`Wrote ${tgzBuf.length} bytes to target file '${tgzPath}'.`);
@@ -324,7 +318,13 @@ exports.PostPack = function PostPack(clientScripts, options) {
     fs.writeFileSync(exportFile, tgzPath, { encoding: 'utf8' });
 }
 
-exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
+/**
+ * @param {string[]} argv The array to slice - usually `process.argv`.
+ * @param {string} file The file name to lookup, usually `__filename`.
+ * @param {boolean=} noDefaultAll Do *not* return the whole input array `argv`
+ * if `file` could not be found.
+ */
+exports.SliceArgv = function SliceArgs(argv, file, noDefaultAll) {
 
     if (!Array.isArray(argv)) {
         throw Error(`Parameter 'argv' is not an array.`);
@@ -351,7 +351,7 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
         });
     }
 
-    if (startIdx < 1 && !defaultAll) {
+    if (startIdx < 1 && !noDefaultAll) {
         return [];
     } else {
         return process.argv.slice(startIdx + 1);
@@ -359,6 +359,7 @@ exports.SliceArgv = function SliceArgs(argv, file, defaultAll) {
 }
 
 /**
+ * @typedef { import('./lib/generate-adoc').GenerateReadmeOptions } GenerateReadmeOptions
  * @param {string=} packagePath Defaults to `.`
  * @param {string=} readmeFileName Defaults to `README.adoc`
  * @param {GenerateReadmeOptions=} options A `GenerateReadmeOptions` object
@@ -412,7 +413,7 @@ var stderr = [];
 
 /**
  * Internal variable for caching a function that resets stdout and stderr.
- * @type {()}
+ * @type {()=>void}
  */
 var unhook_intercept = null;
 
@@ -472,11 +473,13 @@ exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
 //#endregion
 
 //#region String extensions
+// @ts-ignore
 if (String.prototype.toLiteral == null) {
+    // @ts-ignore
     String.prototype.toLiteral = function () {
-        result =  '';
-        this.replace(/[\s\S]/g, function(character) {
-            var escape = character.charCodeAt();
+        var result =  '';
+        this.replace(/[\s\S]/g, function(character, ...args) {
+            var escape = character.charCodeAt(0);
             switch (escape) {
                 case 0x0000:
                     result += '\\0';
@@ -509,28 +512,35 @@ if (String.prototype.toLiteral == null) {
                     result += '\\\\';
                     break;
                 default:
-                    escape = escape.toString(16);
-                    var longhand = escape.length > 2;
-                    result += '\\' + (longhand ? 'u' : 'x') + ('0000' + escape).slice(longhand ? -4 : -2);
-                    break;
+                    var escapeStr = escape.toString(16);
+                    var longhand = escapeStr.length > 2;
+                    result += '\\' + (longhand ? 'u' : 'x') + ('0000' + escapeStr).slice(longhand ? -4 : -2);
+                    return '';
             }
         });
         return result;
     }
 }
 
+// @ts-ignore
 if (String.prototype.isWhitespace == null) {
+    // @ts-ignore
     String.prototype.isWhitespace = function () {
         return this.length > 0 && this.replace(/\s/g, '').length < 1;
     }
 }
 
+// @ts-ignore
 if (String.prototype.markWhiteSpace == null) {
+    // @ts-ignore
     String.prototype.markWhiteSpace = function (retain) {
+        // @ts-ignore
         if (this.isWhitespace()) {
             if (retain) {
+                // @ts-ignore
                 return this.toLiteral() + this;
             } else {
+                // @ts-ignore
                 return this.toLiteral();
             }
         } else {
@@ -551,7 +561,7 @@ const readOnlyProperties = [];
  * adds the property name `p` to the `readOnlyProperties[]` array.
  * @param {string} p The property name.
  * @param {boolean} enumerable Controls whether the property name `p` is added to the `readOnlyProperties[]` array.
- * @param {()} getter The `get` function.
+ * @param {()=>any} getter The `get` function.
  */
 function defineReadOnlyProperty(p, enumerable, getter) {
     Object.defineProperty(exports, p, {

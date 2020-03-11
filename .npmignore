@@ -4,3 +4,4 @@ doc/**
 .github/**
 *.tgz
 NPM_TARBALL
+tsconfig*.json
