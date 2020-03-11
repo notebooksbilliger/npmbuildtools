@@ -3,8 +3,8 @@ npmbuildtools
 :Author: Thorben Wolkersdorfer
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
-:Date: 2020-03-10
-:Revision: 2.0.0
+:Date: 2020-03-11
+:Revision: 2.1.0
 :License: MIT
 
 - Version {revision}
@@ -113,6 +113,13 @@ The `CreateFallbackReadme()` function in `lib/create-fallback-readme.js` creates
 file and can be called as a script in `PostPack()`, which will inject this file in the packge to be
 published while not having it in project itself. See how to use it in conjuction with `PostPack()` in the
 <<Usage>> example `package.json` .
+
+Type Declarations Support
+~~~~~~~~~~~~~~~~~~~~~~~~
+Support for adding type declarations (`*.d.ts`) to a JavaScript project - just
+a `RemoveDeclarations()` function in `lib/declaration-files.js` that removes
+existing declaration files. Useful for all who lost the fight against the
+`files`, `include` and `exclude` elements of `tsconfig.json` (like I did).
 
 Console Capturing
 ~~~~~~~~~~~~~~~~~

@@ -81,6 +81,13 @@ file and can be called as a script in `PostPack()`, which will inject this file 
 published while not having it in project itself. See how to use it in conjuction with `PostPack()` in the
 <<Usage>> example `package.json` .
 
+Type Declarations Support
+~~~~~~~~~~~~~~~~~~~~~~~~
+Support for adding type declarations (`*.d.ts`) to a JavaScript project - just
+a `RemoveDeclarations()` function in `lib/declaration-files.js` that removes
+existing declaration files. Useful for all who lost the fight against the
+`files`, `include` and `exclude` elements of `tsconfig.json` (like I did).
+
 Console Capturing
 ~~~~~~~~~~~~~~~~~
 During tests, output from the tested functions are sometimes unwanted. Most of the time, a plain and simple

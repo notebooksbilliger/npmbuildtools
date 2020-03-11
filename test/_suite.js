@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const assert = require('assert');
 const btools = require('../index');
+// @ts-ignore
 const thisPackage = require('../package.json');
 
 if (btools.TerminalCanBlock) {
@@ -74,6 +75,30 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
     });
 });
 
+describe(`${thisPackage.name} declaration-files tests`, function () {
+    var deffiles = require('../lib/declaration-files');
+
+    it('RemoveDeclarations() should succeed', function(done) {
+        var result = 0;
+        var expectedSubfolders = 3; // current status may change
+
+        btools.ConsoleCaptureStart();
+        try {
+            result = deffiles.RemoveDeclarations(undefined, { dryRun: true });
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
+        assert.equal(btools.stdout[0], `Removing declaration files (*.d.ts) from path '${path.resolve('.')}' and ${expectedSubfolders} subfolders.\n`, `stdout first  line should contain`);
+        assert.equal(btools.stdout[btools.stdout.length - 1], `Removed ${result} declaration files (*.d.ts) from path '${path.resolve('.')}'.\n`, `stdout second line should contain`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
+        done();
+    });
+});
+
 describe(`${thisPackage.name} AsciiDoc tests`, function () {
     var genadoc = require('../lib/generate-adoc');
 
@@ -82,6 +107,7 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
 
         btools.ConsoleCaptureStart();
         try {
+            // @ts-ignore
             result = genadoc.ResolveIncludes();
             assert.fail(`should have failed`);
         } catch(err) {
@@ -120,6 +146,7 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
 
         btools.ConsoleCaptureStart();
         try {
+            // @ts-ignore
             result = genadoc.GetAttribute();
             assert.fail(`should have failed`);
         } catch(err) {
@@ -373,6 +400,7 @@ describe(`${thisPackage.name} UpdatePackageVersion() tests`, function () {
     it('should fail with invalid file spec', function(done) {
         btools.ConsoleCaptureStart();
         try {
+            // @ts-ignore
             updatepackage.UpdatePackageVersion();
             assert.fail('should have failed');
         } catch(err) {
@@ -387,6 +415,7 @@ describe(`${thisPackage.name} UpdatePackageVersion() tests`, function () {
     it('should fail with invalid release type', function(done) {
         btools.ConsoleCaptureStart();
         try {
+            // @ts-ignore
             updatepackage.UpdatePackageVersion('fakePath');
             assert.fail('should have failed');
         } catch(err) {
@@ -400,7 +429,7 @@ describe(`${thisPackage.name} UpdatePackageVersion() tests`, function () {
 
     it('should succeed with temporary package file', function(done) {
         var tempPackageFile = path.resolve(`./test/package.json`);
-        var tempReleaseType = 'patch';
+        var tempReleaseType = updatepackage.ReleaseType('patch');
 
         fs.writeJSONSync(tempPackageFile, thisPackage, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
         btools.ConsoleCaptureStart();

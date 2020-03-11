@@ -1,3 +1,5 @@
-import { HistoryEntry } from "./vc-utils";
-
-function GetGitHistory(pathSpec: string): HistoryEntry[];
+export function GetGitHistory(pathSpec: string): {
+    Date: Date;
+    Timestamp: any;
+    StatusEntries: any[];
+}[];
