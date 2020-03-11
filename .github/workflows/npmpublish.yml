@@ -30,6 +30,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
       - name: Increment Package Version
         run: node -e "require('./lib/update-package-version').UpdatePackageVersion('.', 'patch')"
+      - name: List all environment variables (temporarily)
+        run: set
+        shell: bash
       - run: git status
       - run: git add "package.json"
       - run: git status
