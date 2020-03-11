@@ -39,5 +39,5 @@ jobs:
       - run: git status
       - run: git add "package.json"
       - run: git status
-      - run: git commit -m "Automatic version patch increment after publish" --author="$(GITHUB_ACTOR) <$(USER)@$(HOSTNAME)>"
+      - run: git commit -m "Automatic version patch increment after publish" --author="$GITHUB_ACTOR <$USER@$HOSTNAME>"
       - run: git status
