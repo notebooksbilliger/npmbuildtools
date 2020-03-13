@@ -9,12 +9,103 @@ const thisPackage = require('../package.json');
 if (btools.TerminalCanBlock) {
     console.log('\u001b[2J'); // clear screen
 }
-console.log('npmbuildtools read-only properties:');
-btools.ReadOnlyProperties.forEach(prop => {
-    console.log(`\t${prop} = ${btools[prop]}`);
-});
 
 console.log('\nRunning Mocha Test Suite ...');
+
+describe(`${thisPackage.name} read-only properties`, function () {
+    it(`should be listed accurately`, (done) => {
+        var table = [];
+        btools.ReadOnlyProperties.forEach(prop => {
+            console.log(`      ${prop}\t= ${btools[prop]}\t(${typeof(btools[prop])})`);
+            table.push({ name: prop, value: btools[prop], type: typeof(btools[prop]) });
+        });
+        // console.log(table);
+        done();
+    });
+});
+
+describe(`${thisPackage.name} Console tests`, function () {
+    it('ConsoleLogLevel.Validate() should succeed', done => {
+        /**
+         * @type {import('../index').ConsoleOptions}
+         */
+        var consoleOptions;
+
+        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default' });
+        assert.equal(consoleOptions.verbose, false, `'verbose' should have value`);
+        assert.equal(consoleOptions.debug, false, `'debug' should have value`);
+
+        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'verbose' });
+        assert.equal(consoleOptions.verbose, true, `'verbose' should have value`);
+        assert.equal(consoleOptions.debug, false, `'debug' should have value`);
+
+        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'debug' });
+        assert.equal(consoleOptions.verbose, true, `'verbose' should have value`);
+        assert.equal(consoleOptions.debug, true, `'debug' should have value`);
+
+        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default', verbose: true });
+        assert.equal(consoleOptions.verbose, true, `'verbose' should have value`);
+        assert.equal(consoleOptions.debug, false, `'debug' should have value`);
+
+        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default', debug: true });
+        assert.equal(consoleOptions.verbose, false, `'verbose' should have value`);
+        assert.equal(consoleOptions.debug, true, `'debug' should have value`);
+
+        done();
+    });
+
+    btools.ConsoleSupportedPlatforms.forEach(platform => {
+        it(`should succeed for plaform '${platform}'`, function(done) {
+            btools.ConsoleCaptureStart();
+            try {
+                // @ts-ignore
+                btools.ConsoleInit(platform);
+                btools.ConsoleCaptureStop();
+            } catch(err) {
+                btools.ConsoleCaptureStop();
+                throw err;
+            }
+
+            btools.ConsoleCaptureStart();
+            try {
+                btools.ConsoleDefaultMethods.forEach(method => {
+                    console[method](`Testing '${method}' message.`);
+                });
+                btools.ConsoleCaptureStop();
+            } catch (err) {
+                btools.ConsoleCaptureStop();
+                throw err;
+            }
+    
+
+            assert.equal(btools.stdout.length, btools.DebugMode ? 3 : 2, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
+            assert.equal(btools.stderr.length, 1, `stderr should contain exact number of lines:\n${btools.stderr.join('')}`);
+            btools.ConsoleDefaultMethods.forEach(method => {
+                var lines = [];
+                var checkMessage = `Testing '${method}' message.\n`;
+                if (method == 'error') {
+                    btools.stderr.forEach(line => {
+                        // @ts-ignore
+                        lines.push(line.plain(method));
+                    });
+                    assert.ok(lines.includes(checkMessage), `stderr should include '${checkMessage}'`);
+                } else {
+                    btools.stdout.forEach(line => {
+                        // @ts-ignore
+                        lines.push(line.plain(method));
+                    });
+                    if (method == 'debug' && !btools.DebugMode) {
+                        assert.ok(!lines.includes(checkMessage), `stdout shouldn't include '${checkMessage}'`);
+                    } else {
+                        assert.ok(lines.includes(checkMessage), `stdout should include '${checkMessage}'`);
+                    }
+                }
+            });
+
+            done();
+        });
+    });
+});
 
 describe(`${thisPackage.name} vc-utils tests`, function () {
     var vc = require('../lib/vc-utils');
@@ -48,7 +139,7 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
             throw err;
         }
 
-        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
+        assert.equal(btools.stdout.length, btools.DebugMode ? 4 : 0, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
         assert.ok(isNaN(result), `Variable 'result' should be NaN`);
 
@@ -67,7 +158,7 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
             throw err;
         }
 
-        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
+        assert.equal(btools.stdout.length, btools.DebugMode ? 4 : 0, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
         assert.ok(!isNaN(result), `Variable 'result' should not be NaN`);
         assert.equal(typeof(result), 'number', `Variable 'result' should have exact type`);
@@ -80,11 +171,11 @@ describe(`${thisPackage.name} declaration-files tests`, function () {
 
     it('RemoveDeclarations() should succeed', function(done) {
         var result = 0;
-        var expectedSubfolders = 3; // current status may change
+        var expectedSubfolders = 3; // current status, may change
 
         btools.ConsoleCaptureStart();
         try {
-            result = deffiles.RemoveDeclarations(undefined, { dryRun: true });
+            result = deffiles.RemoveDeclarations(undefined, { dryRun: true, consoleOptions: { logLevel: 'verbose' } });
             btools.ConsoleCaptureStop();
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -92,8 +183,10 @@ describe(`${thisPackage.name} declaration-files tests`, function () {
         }
 
         assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
-        assert.equal(btools.stdout[0], `Removing declaration files (*.d.ts) from path '${path.resolve('.')}' and ${expectedSubfolders} subfolders.\n`, `stdout first  line should contain`);
-        assert.equal(btools.stdout[btools.stdout.length - 1], `Removed ${result} declaration files (*.d.ts) from path '${path.resolve('.')}'.\n`, `stdout second line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[0].plain('info'), `Removing declaration files (*.d.ts) from path '${path.resolve('.')}' and ${expectedSubfolders} subfolders.\n`, `stdout first  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Removed ${result} declaration files (*.d.ts) from path '${path.resolve('.')}'.\n`, `stdout second line should contain`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
         done();
     });
@@ -135,8 +228,10 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
 
         assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines:\n${btools.stdout.join('')}`);
         assert.equal(btools.stderr.length, 2, `stderr should contain exact number of lines:\n${btools.stderr.join('')}`);
-        assert.equal(btools.stderr[0], `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.\n`, `stderr first  line should contain`);
-        assert.equal(btools.stderr[1], `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.\n`, `stderr second line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stderr[0].plain('error'), `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.\n`, `stderr first  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stderr[1].plain('error'), `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.\n`, `stderr second line should contain`);
 
         done();
     });
@@ -268,9 +363,11 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
         }
 
         assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
-        assert.equal(btools.stdout.length, 7, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
-        assert.equal(btools.stdout[0], `Creating/Updating file '${readmeFileName}'.\n`, `stdout first  line should contain`);
-        assert.equal(btools.stdout[btools.stdout.length - 1], `Successfully updated readme file '${readmeFile}'.\n`, `stdout second line should contain`);
+        assert.equal(btools.stdout.length, btools.DebugMode ? 7 : 2, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
+        // @ts-ignore
+        assert.equal(btools.stdout[0].plain('info'), `Creating/Updating file '${readmeFileName}'.\n`, `stdout first  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Successfully updated readme file '${readmeFile}'.\n`, `stdout second line should contain`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
 
         done();
@@ -294,7 +391,7 @@ describe(`${thisPackage.name} PostPack() tests`, function () {
 
         btools.ConsoleCaptureStart();
         try {
-            btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], { verbose: true, debug: btools.DebugMode });
+            btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], { logLevel: 'verbose', debug: btools.DebugMode });
             btools.ConsoleCaptureStop();
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -333,10 +430,14 @@ describe(`${thisPackage.name} CleanPackage() tests`, function () {
         }
 
         assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
-        assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Cleaning up package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
-        assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Removing element '${tempElements[0]}'.\n`, `stdout second line should contain`);
-        assert.equal(btools.stdout[2], `npm \u001b[34mnotice\u001b[0m Element '${tempElements[1]}' doesn't exist.\n`, `stdout third  line should contain`);
-        assert.equal(btools.stdout[3], `npm \u001b[34mnotice\u001b[0m Successfully cleaned up '${tempPackageFile}'.\n`, `stdout fourth line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[0].plain('info'), `Cleaning up package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[1].plain('info'), `Removing element '${tempElements[0]}'.\n`, `stdout second line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[2].plain('info'), `Element '${tempElements[1]}' doesn't exist.\n`, `stdout third  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[3].plain('info'), `Successfully cleaned up '${tempPackageFile}'.\n`, `stdout fourth line should contain`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
 
         done();
@@ -368,8 +469,10 @@ describe(`${thisPackage.name} CreateFallbackReadme() tests`, function () {
         assert.ok(!fs.existsSync(tempReadmeFile), `File ${tempReadmeFile} should have been deleted`);
 
         assert.equal(btools.stdout.length, 2, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
-        assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Creating readme file '${tempReadmeFile}'.\n`, `stdout first  line should contain`);
-        assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Successfully created '${tempReadmeFile}'.\n`, `stdout second line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[0].plain('info'), `Creating readme file '${tempReadmeFile}'.\n`, `stdout first  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[1].plain('info'), `Successfully created '${tempReadmeFile}'.\n`, `stdout second line should contain`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
 
         done();
@@ -444,8 +547,10 @@ describe(`${thisPackage.name} UpdatePackageVersion() tests`, function () {
         }
 
         assert.equal(btools.stdout.length, 2, `stdout should contain exact number of lines:\n${btools.stdout.join('')}`);
-        assert.equal(btools.stdout[0], `npm \u001b[34mnotice\u001b[0m Updating version of package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
-        assert.equal(btools.stdout[1], `npm \u001b[34mnotice\u001b[0m Successfully updated ${tempReleaseType} of version from [${thisPackage['version']}] to [${require('semver').inc(thisPackage['version'], tempReleaseType)}] in '${tempPackageFile}'.\n`, `stdout second line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[0].plain('info'), `Updating version of package file '${tempPackageFile}'.\n`, `stdout first  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[1].plain('info'), `Successfully updated ${tempReleaseType} of version from [${thisPackage['version']}] to [${require('semver').inc(thisPackage['version'], tempReleaseType)}] in '${tempPackageFile}'.\n`, `stdout second line should contain`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:\n${btools.stderr.join('')}`);
 
         done();
