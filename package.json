@@ -9,7 +9,7 @@
         "prebuild": "node -e \"require('./lib/declaration-files').RemoveDeclarations()\"",
         "build": "tsc -p tsconfig.build.json",
         "postbuild": "tsc -p tsconfig.json",
-        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.pretest', 'scripts.test', 'scripts.prebuild', 'scripts.build', 'scripts.postbuild', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { verbose: true })\"",
+        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.pretest', 'scripts.test', 'scripts.prebuild', 'scripts.build', 'scripts.postbuild', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { logLevel: 'verbose' })\"",
         "prepublishOnly": "node -e \"require('./lib/generate-adoc').GenerateReadme()\""
     },
     "keywords": [
