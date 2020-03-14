@@ -164,6 +164,83 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
         assert.equal(typeof(result), 'number', `Variable 'result' should have exact type`);
         done();
     });
+
+    it(`SupportedVersionControlProviders() should return specific list`, function(done) {
+        var result;
+        btools.ConsoleCaptureStart();
+        try {
+            result = vc.SupportedVersionControlProviders();
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        var expectedProviders = ['git', 'tfs'];
+        var exceptions = [];
+        try {
+            assert.equal(result.length, expectedProviders.length, `result array should have exact length`);
+        } catch(err) {
+            exceptions.push(err);
+        }
+
+        expectedProviders.forEach(provider => {
+            try {
+                assert.ok(result.includes(provider), `result array should include '${provider}'`);
+            } catch(err) {
+                exceptions.push(err);
+            }
+        });
+
+        result.forEach(provider => {
+            try {
+                assert.ok(expectedProviders.includes(provider), `result array should NOT include provider '${provider}'`);
+            } catch(err) {
+                exceptions.push(err);
+            }
+        });
+
+        if (exceptions.length > 0) {
+            var msg = [];
+            exceptions.forEach(err => msg.push(err.message));
+            assert.fail(`Aggregate error, collected ${exceptions.length} errors total:${os.EOL}\t${msg.join(`${os.EOL}\t`)}`);
+        }
+
+        done();
+    });
+
+    it(`GetVersionControlProvider() should return [undefined] if no VC provider was found`, function(done) {
+        var result;
+        btools.ConsoleCaptureStart();
+        try {
+            result = vc.GetVersionControlProvider('../');
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        assert.equal(`${result}`, 'undefined', `result should be`);
+
+        done();
+    });
+
+    it(`GetVersionControlProvider() should succeed`, function(done) {
+        var result;
+        btools.ConsoleCaptureStart();
+        try {
+            //result = vc.GetVersionControlProvider('C:\\Users\\thorbenw\\Documents\\Visual Studio 2015\\Projects\\oms2nav-twk');
+            result = vc.GetVersionControlProvider();
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        assert.equal(`${result}`, 'git', `result should be`);
+
+        done();
+    });
 });
 
 describe(`${thisPackage.name} declaration-files tests`, function () {
