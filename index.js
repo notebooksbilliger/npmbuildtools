@@ -720,7 +720,7 @@ exports.ConsoleReset = () => {
 /**
  * Configures the console according to console options and pushes the entire
  * profile to stacks.
- * @param {ConsoleOptions} consoleOptions A `ConsoleOptions` object.
+ * @param {ConsoleOptions=} consoleOptions A `ConsoleOptions` object.
  * @returns {ConsoleOptions} A safeguarded `ConsoleOptions` object.
  */
 exports.ConsolePushOptions = (consoleOptions) => {
