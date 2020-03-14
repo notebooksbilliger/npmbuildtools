@@ -1,4 +1,4 @@
-require('colors');
+const colors = require('colors');
 const cp = require('child_process');
 const os = require('os');
 const fs = require('fs-extra');
@@ -56,37 +56,92 @@ if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
 }
 //#endregion
 
-/**
- * @typedef { { verbose: boolean, debug: boolean} } PostPackOptions
- * @param {string[][]} clientScripts An array of node commands to run on the package directory
- * @param {PostPackOptions=} options A `PostPackOptions` object
- */
-exports.PostPack = function PostPack(clientScripts, options) {
-    if (!options) {
-        options = { verbose: false, debug: false };
-    }
-    var verbose = options.verbose;
-    var debug = options.debug;
+//#region NPM console
+ /**
+  * Configures the `console` object for npm-like output. Call this function if
+  * you have an `ConsoleOptions` in place and want your output to look like npm
+  * output. When finished, call `consoleResetNPM()` to revert `console` to it's
+  * prior state.
+  * @param {ConsoleOptions} consoleOptions A `ConsoleOptions` object.
+  * @returns {ConsoleOptions} A safeguarded `ConsoleOptions` object.
+  */
+function consoleInitNPM(consoleOptions) {
+    consoleOptions = exports.ConsoleLogLevel.Validate(consoleOptions);
 
-    if (verbose) {
-        console.info = (message) => { console.log(`npm \u001b[34mnotice\u001b[0m ${message}`) };
+    var theme = {
+        debug: 'reset',
+        info: 'reset',
+        warn: 'reset',
+        error: 'reset',
+    };
+
+    var systemPrefixes = {};
+    if (!exports.RunningInGitHub) {
+        systemPrefixes.debug = '';
+        systemPrefixes.info = '';
+        systemPrefixes.warn = '';
+        systemPrefixes.error = '';
+    }
+
+    var prefixes = {};
+    if (consoleOptions.verbose) {
+        prefixes['info'] = 'npm '.reset + 'notice'.blue + ' ';
     } else {
-        console.info = (message) => {};
+        prefixes['info'] = null;
     }
 
-    if (debug) {
-        console.debug = (message) => { console.log(`npm \u001b[93mdebug\u001b[0m  ${message}`) };
+    if (consoleOptions.debug) {
+        prefixes['debug'] = 'npm '.reset + 'debug'.yellow + ' ';
+    } else {
+        prefixes['debug'] = null;
+    }
 
+    prefixes['warn'] = 'npm '.reset + 'WARN'.black.bgYellow + ' ';
+    prefixes['error'] = 'npm '.reset + 'ERR!'.red + ' ';
+
+    exports.ConsolePushTheme(theme);
+    exports.ConsolePushSystemPrefixes(systemPrefixes);
+    exports.ConsolePushPrefixes(prefixes);
+
+    return consoleOptions;
+}
+
+/**
+ * Resets all changes on `console` that are made by a prior call of
+ * `consoleInitNPM()`.
+ */
+function consoleResetNPM() {
+    exports.ConsolePopSystemPrefixes();
+    exports.ConsolePopPrefixes();
+    exports.ConsolePopTheme();
+}
+//#endregion
+
+//#region PostPack()
+/**
+ * @param {string[][]} clientScripts An array of node commands to run on the
+ * package directory.
+ * @param {ConsoleOptions=} consoleOptions A `ConsoleOptions` object.
+ */
+exports.PostPack = (clientScripts, consoleOptions) => {
+    consoleOptions = consoleInitNPM(consoleOptions);
+
+    if (consoleOptions.debug) {
         console.debug(`Available environment variables:`);
-        var envVars = Object.keys(process.env);
-        envVars.forEach(envVar => {
+        Object.keys(process.env).forEach(envVar => {
             console.debug(`${envVar} = ${process.env[envVar]}`);
         });
-    } else {
-        console.debug = (message) => {};
     }
 
-    console.info(`\u001b[35m=== Post Pack Processing ===\u001b[0m`);
+    try {
+        postPack(clientScripts, consoleOptions);
+    } finally {
+        consoleResetNPM();
+    }
+}
+
+function postPack(clientScripts, options) {
+    console.info(`=== Post Pack Processing ===`.magenta);
 
     var assumeDryRun = false;
     var prefix = "package";
@@ -160,7 +215,7 @@ exports.PostPack = function PostPack(clientScripts, options) {
         console.info(`Created temporary folder '${tmpDir}'.`);
     }
 
-    if (debug) {
+    if (options.debug) {
         var tgzBak = path.join(tmpDir, `${tgzFile}.bak`);
         console.debug(`Creating retention copy '${tgzBak}' of tarball '${tgzPath}'.`);
         fs.copyFileSync(tgzPath, tgzBak);
@@ -193,7 +248,7 @@ exports.PostPack = function PostPack(clientScripts, options) {
             packageList.push(entry.path.replace(prefrx, ''));
         }
     });
-    if (debug) {
+    if (options.debug) {
         var bakPath = `${tarPath}.bak`;
         console.debug(`Creating retention copy '${bakPath}' of decompression buffer '${tarPath}'.`);
         fs.copyFileSync(tarPath, bakPath);
@@ -209,7 +264,7 @@ exports.PostPack = function PostPack(clientScripts, options) {
         console.info(`Removed decompression buffer '${tarPath}'.`);
     }
 
-    // Begin processing package
+    //#region Process package
     process.env['npm_postpack_dir'] = wrkDir;
     if (clientScripts) {
         if (!Array.isArray(clientScripts)) {
@@ -225,7 +280,7 @@ exports.PostPack = function PostPack(clientScripts, options) {
         });
     }
     delete process.env['npm_postpack_dir'];
-    // End processing package
+    //#endregion
 
     var fileList = [];
     packageList.forEach(file => {
@@ -263,7 +318,7 @@ exports.PostPack = function PostPack(clientScripts, options) {
     console.info(`Compressed to ${tgzBuf.length} bytes from compression buffer '${tarPath}'.`);
     fs.writeFileSync(tgzPath, tgzBuf);
     console.info(`Wrote ${tgzBuf.length} bytes to target file '${tgzPath}'.`);
-    if (debug) {
+    if (options.debug) {
         tgzBak = path.join(tmpDir, `${tgzFile}`);
         console.debug(`Creating retention copy '${tgzBak}' of new tarball '${tgzPath}'.`);
         fs.copyFileSync(tgzPath, tgzBak);
@@ -317,14 +372,16 @@ exports.PostPack = function PostPack(clientScripts, options) {
     console.debug(`Emitting tarball path '${tgzPath}' to export file '${exportFile}'.`);
     fs.writeFileSync(exportFile, tgzPath, { encoding: 'utf8' });
 }
+//#endregion
 
+//#region SliceArgv()
 /**
  * @param {string[]} argv The array to slice - usually `process.argv`.
  * @param {string} file The file name to lookup, usually `__filename`.
  * @param {boolean=} noDefaultAll Do *not* return the whole input array `argv`
  * if `file` could not be found.
  */
-exports.SliceArgv = function SliceArgs(argv, file, noDefaultAll) {
+exports.SliceArgv = (argv, file, noDefaultAll) => {
 
     if (!Array.isArray(argv)) {
         throw Error(`Parameter 'argv' is not an array.`);
@@ -357,14 +414,16 @@ exports.SliceArgv = function SliceArgs(argv, file, noDefaultAll) {
         return process.argv.slice(startIdx + 1);
     }
 }
+//#endregion
 
+//#region CheckReadme()
 /**
  * @typedef { import('./lib/generate-adoc').GenerateReadmeOptions } GenerateReadmeOptions
  * @param {string=} packagePath Defaults to `.`
  * @param {string=} readmeFileName Defaults to `README.adoc`
  * @param {GenerateReadmeOptions=} options A `GenerateReadmeOptions` object
  */
-exports.CheckReadme = function CheckReadme(packagePath, readmeFileName, options) {
+exports.CheckReadme = (packagePath, readmeFileName, options) => {
     var oldReadmeContent = '', newReadmeContent = '';
     var readmeFile = path.join(packagePath, readmeFileName);
     if (fs.existsSync(readmeFile)) {
@@ -391,14 +450,18 @@ exports.CheckReadme = function CheckReadme(packagePath, readmeFileName, options)
     });
     return changes.join('');
 }
+//#endregion
 
-exports.ColorizeDiff = function ColorizeDiff(diff, addedColor, removedColor, unchangedColor) {
+//#region ColorizeDiff()
+exports.ColorizeDiff = (diff, addedColor, removedColor, unchangedColor) => {
     if (diff.added) { return diff.value.markWhiteSpace(true)[addedColor]; }
     if (diff.removed) { return diff.value.markWhiteSpace()[removedColor]; }
     return diff.value[unchangedColor];
 }
+//#endregion
 
 //#region Console Capturing Support
+//#region  Variables
 /**
  * Internal buffer for captured stdout text lines.
  * @type {string[]}
@@ -430,8 +493,15 @@ defineReadOnlyProperty('stdout', false, () => stdout);
  */
 exports.stderr = [];
 defineReadOnlyProperty('stderr', false, () => stderr);
+//#endregion
 
-exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
+/**
+ * Starts capturing the console. If the `DebugMode` property evaluates to
+ * `true`, all captured content is also still forwarded to the console,
+ * otherwise the console won't receive any content until `ConsoleCaptureStop()`
+ * is called.
+ */
+exports.ConsoleCaptureStart = () => {
     if (unhook_intercept) {
         throw Error('Console capture has already been started.');
     }
@@ -458,7 +528,13 @@ exports.ConsoleCaptureStart = function ConsoleCaptureStart() {
     );
 }
 
-exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
+/**
+ * Stops capturing the console.
+ * @param {boolean} emit Specifies whether to flush all buffered content to the
+ * console. The internal buffers will nevertheless be retained until the next
+ * call of `ConsoleCaptureStart()`.
+ */
+exports.ConsoleCaptureStop = (emit = false) => {
     if (!unhook_intercept) {
         throw Error('Console capture has not been started.');
     }
@@ -469,6 +545,355 @@ exports.ConsoleCaptureStop = function ConsoleCaptureStop(emit = false) {
         console.log(stdout.join(''));
         console.error(stderr.join(''));
     }
+}
+//#endregion
+
+//#region Console Formatting Support
+//#region  Variables
+/** Internal variable storing the current prefix set. */
+var consoleSystemPrefix = {}
+
+/** Internal stack buffer for system prefixes. */
+var consoleSystemPrefixes = [];
+/** Internal stack buffer for prefixes. */
+var consolePrefixes = [];
+/** Internal stack buffer for themes. */
+var consoleThemes = [];
+/**
+ * A list of supported console platforms. These values are valid parameters for
+ * `ConsoleInit()`.
+ */
+exports.ConsoleSupportedPlatforms = ['github', 'win32', 'other', undefined];
+/**
+ * A list of default methods on the `console` object.
+ */
+exports.ConsoleDefaultMethods = ['debug', 'info', 'warn', 'error'];
+/**
+ * Enumeration of valid console log levels, alon with a validator for
+ * `ConsoleOptions` objects.
+ */
+exports.ConsoleLogLevel = {
+    default: 0,
+    verbose: 1,
+    debug: 2,
+    /**
+     * Checks and returns a `ConsoleOptions` object.
+     * @param {ConsoleOptions} consoleOptions A `ConsoleOptions` object.
+     * @returns {ConsoleOptions} A safeguarded `ConsoleOptions` object.
+     * */
+    Validate: (consoleOptions) => {
+        if (!consoleOptions) {
+            consoleOptions = { logLevel: 'default', verbose: false, debug: false };
+        }
+        if (consoleOptions.logLevel == undefined) {
+            console.warn(`Using 'ConsoleOptions' without specifying the 'logLevel' property is deprecated and may no longer be supported from the next major version release on.`);
+            consoleOptions.logLevel = 'default';
+        }
+        if (consoleOptions.verbose == undefined) {
+            consoleOptions.verbose = false;
+        }
+        if (consoleOptions.debug == undefined) {
+            consoleOptions.debug = false;
+        }
+
+        var logLevel = exports.ConsoleLogLevel[consoleOptions.logLevel];
+        if (logLevel >= exports.ConsoleLogLevel.verbose) {
+            consoleOptions.verbose = true;
+        }
+        if (logLevel >= exports.ConsoleLogLevel.debug) {
+            consoleOptions.debug = true;
+        }
+
+        return consoleOptions;
+    }
+}
+/**
+ * @typedef {'default'|'verbose'|'debug'} LogLevel
+ * @typedef { { logLevel?: LogLevel, verbose?: boolean, debug?: boolean} } ConsoleOptions*/ // Deprecated, albeit new in 2.2.0
+/* @typedef { { logLevel: LogLevel, verbose?: boolean, debug?: boolean} } ConsoleOptions    // Will be new definition starting with next major version
+ */
+//#endregion
+
+/**
+ * Resets and initializes the `console` object.
+ * @param {('github'|'win32'|'other')=} platform The platform `console` output
+ * is meant to look like. If omitted, the platform will be evaluated
+ * automatically.
+ */
+exports.ConsoleInit = (platform) => {
+    exports.ConsoleReset();
+    
+    if (!platform) {
+        // @ts-ignore
+        platform = this.ConsolePlatform;
+    }
+
+    switch (platform) {
+        case 'github':
+            exports.ConsolePushTheme({
+                silly: 'rainbow',
+                input: 'grey',
+                verbose: 'strip',
+                prompt: 'grey',
+                info: 'strip',
+                data: 'grey',
+                help: 'cyan',
+                warn: 'strip',
+                debug: 'strip',
+                error: 'strip',
+            });
+            exports.ConsolePushSystemPrefixes({
+                debug: '::debug::',
+                info: '',
+                warn: '::warning::',
+                error: '::error::',
+            });
+            break;
+        case 'win32':
+            exports.ConsolePushTheme({
+                silly: 'rainbow',
+                input: 'grey',
+                verbose: 'brightCyan',
+                prompt: 'grey',
+                info: 'cyan',
+                data: 'grey',
+                help: 'cyan',
+                warn: 'yellow',
+                debug: 'brightCyan',
+                error: 'red',
+            });
+            exports.ConsolePushSystemPrefixes({
+                debug: 'DEBUG: '['debug'],
+                info: 'VERBOSE: '['info'],
+                warn: 'WARNING: '['warn'],
+                error: 'ERROR: '['error'],
+            });
+            break;
+        default:
+            exports.ConsolePushTheme({
+                silly: 'rainbow',
+                input: 'grey',
+                verbose: 'cyan',
+                prompt: 'grey',
+                info: 'green',
+                data: 'grey',
+                help: 'cyan',
+                warn: 'yellow',
+                debug: 'blue',
+                error: 'red',
+            });
+            exports.ConsolePushSystemPrefixes({
+                debug: '',
+                info: '',
+                warn: '',
+                error: '',
+            });
+            break;
+    }
+
+    exports.ConsolePushPrefixes({
+        debug: '',
+        info: '',
+        warn: '',
+        error: '',
+    });
+}
+
+/**
+ * Resets the console object entirely (i.e. resotres all stacks until there's
+ * nothing left on any of them).
+ */
+exports.ConsoleReset = () => {
+    while (consoleSystemPrefixes.length > 0) {
+        exports.ConsolePopSystemPrefixes();
+    }
+    
+    while (consolePrefixes.length > 0) {
+        exports.ConsolePopPrefixes();
+    }
+
+    while (consoleThemes.length > 0) {
+        exports.ConsolePopTheme();
+    }
+}
+
+/**
+ * Configures the console according to console options and pushes the entire
+ * profile to stacks.
+ * @param {ConsoleOptions} consoleOptions A `ConsoleOptions` object.
+ * @returns {ConsoleOptions} A safeguarded `ConsoleOptions` object.
+ */
+exports.ConsolePushOptions = (consoleOptions) => {
+    consoleOptions = exports.ConsoleLogLevel.Validate(consoleOptions);
+
+    var prefixes = {};
+    if (!consoleOptions.verbose) {
+        prefixes['info'] = null;
+    }
+
+    if (!consoleOptions.debug) {
+        prefixes['debug'] = null;
+    }
+
+    exports.ConsolePushTheme();
+    exports.ConsolePushSystemPrefixes();
+    exports.ConsolePushPrefixes(prefixes);
+
+    return consoleOptions;
+}
+
+/**
+ * Restores an entire profile from the stacks.
+ */
+exports.ConsolePopOptions = () => {
+    exports.ConsolePopTheme();
+    exports.ConsolePopSystemPrefixes();
+    exports.ConsolePopPrefixes();
+}
+
+/**
+ * Saves the current prefixes to a stack and applies new prefixes.
+ * @param {Object=} prefix A set of new prefixes. If omitted, an empty set of
+ * prefixes will be pushed (and reset nothing when
+ * `ConsolePopPrefixes()` is called). If the prefix value for a method is set to
+ * `null`, that method will be **muted**!
+ * 
+ * @example
+ * ConsolePushPrefixes({
+ *     debug: null, // mute the console.debug() method
+ *     info: 'DEBUG: ',
+ *     warn: 'WARNING - ',
+ *     error = '!ERROR!:: ',
+ * });
+ */
+exports.ConsolePushPrefixes = (prefix) => {
+    var cache = {};
+    var keys = (typeof(prefix) === 'object') ? Object.keys(prefix) : [];
+    keys.forEach(key => {
+        if (console[key] == undefined) {
+            cache[key] = null;
+        } else {
+            cache[key] = console[key];
+        }
+    });
+    consolePrefixes.push(cache);
+
+    keys.forEach(key => {
+        var hide = (key == 'debug') ? !exports.DebugMode : false; // (prefix[key] == null);
+        hide = hide || (prefix[key] == null);
+        if (hide) {
+            console[key] = (text) => { }
+        } else {
+            if (key == 'error') {
+                console[key] = (text) => { process.stderr.write(`${consoleSystemPrefix[key]}` + `${prefix[key]}${text}`[key] + `\n`) }
+            } else {
+                console[key] = (text) => { process.stdout.write(`${consoleSystemPrefix[key]}` + `${prefix[key]}${text}`[key] + `\n`) }
+            }
+        }
+    });
+}
+
+/**
+ * Restores the prefixes from the stack that were saved last. If there's no 
+ * further set of prefixes on the stack, nothing is changed.
+ */
+exports.ConsolePopPrefixes = () => {
+    if (consolePrefixes.length < 1) {
+        return;
+    }
+
+    var cache = consolePrefixes.pop();
+    Object.keys(cache).forEach(key => {
+        if (null == cache[key]) {
+            delete console[key];
+        } else {
+            console[key] = cache[key];
+        }
+    });
+}
+
+/**
+ * Saves the current system prefixes to a stack and applies new system
+ * prefixes.
+ * @param {Object=} system A set of new system prefixes. If omitted, an empty
+ * set of system prefixes will be pushed (and reset nothing when
+ * `ConsolePopSystemPrefixes()` is called).
+ */
+exports.ConsolePushSystemPrefixes = (system) => {
+    var cache = {};
+    var keys = (typeof(system) === 'object') ? Object.keys(system) : [];
+    keys.forEach(key => {
+        if (consoleSystemPrefix[key] == undefined) {
+            cache[key] = null;
+        } else {
+            cache[key] = consoleSystemPrefix[key];
+        }
+        consoleSystemPrefix[key] = system[key];
+    });
+    consoleSystemPrefixes.push(cache);
+}
+
+/**
+ * Restores the system prefixes from the stack that were saved last. If there's
+ * no further set of system prefixes on the stack, nothing is changed.
+ */
+exports.ConsolePopSystemPrefixes = () => {
+    if (consoleSystemPrefixes.length < 1) {
+        return;
+    }
+
+    var cache = consoleSystemPrefixes.pop();
+    Object.keys(cache).forEach(key => {
+        if (null == cache[key]) {
+            delete consoleSystemPrefix[key];
+        } else {
+            consoleSystemPrefix[key] = cache[key];
+        }
+    });
+}
+
+/**
+ * Saves the current themes to a stack and applies a new theme.
+ * @param {Object=} theme A theme. If omitted, an empty theme will be pushed
+ * (and reset nothing when `ConsolePopTheme()` is called).
+ * @see See also the documentation of themes on the npm `colors` package
+ * homepage (issue `npm home colors` on the command line).
+ */
+exports.ConsolePushTheme = (theme) => {
+    var cache = {};
+    var keys = (typeof(theme) === 'object') ? Object.keys(theme) : [];
+    keys.forEach(key => {
+        if (colors[key] == undefined) {
+            cache[key] = null;
+        } else {
+            cache[key] = colors[key];
+        }
+    });
+    consoleThemes.push(cache);
+
+    if (keys.length > 0) {
+        colors.setTheme(theme);
+    }
+}
+
+/**
+ * Restores the theme from the stack that was saved last. If there's no further
+ * theme on the stack, nothing is changed.
+ */
+exports.ConsolePopTheme = () => {
+    if (consoleThemes.length < 1) {
+        return;
+    }
+
+    var cache = consoleThemes.pop();
+    Object.keys(cache).forEach(key => {
+        if (null == cache[key]) {
+            delete String.prototype[key];
+            delete colors[key];
+        } else {
+            colors[key] = cache[key];
+        }
+    });
 }
 //#endregion
 
@@ -525,7 +950,7 @@ if (String.prototype.toLiteral == null) {
 // @ts-ignore
 if (String.prototype.isWhitespace == null) {
     // @ts-ignore
-    String.prototype.isWhitespace = function () {
+    String.prototype.isWhitespace = function() {
         return this.length > 0 && this.replace(/\s/g, '').length < 1;
     }
 }
@@ -533,7 +958,7 @@ if (String.prototype.isWhitespace == null) {
 // @ts-ignore
 if (String.prototype.markWhiteSpace == null) {
     // @ts-ignore
-    String.prototype.markWhiteSpace = function (retain) {
+    String.prototype.markWhiteSpace = function(retain) {
         // @ts-ignore
         if (this.isWhitespace()) {
             if (retain) {
@@ -548,6 +973,22 @@ if (String.prototype.markWhiteSpace == null) {
         }
     }
 }
+
+// @ts-ignore
+if (String.prototype.plain == null) {
+    // @ts-ignore
+    String.prototype.plain = function(method) {
+        var thisString = this;
+        if (consoleSystemPrefix[method] != undefined) {
+            if (thisString.startsWith(consoleSystemPrefix[method])) {
+                thisString = thisString.substr(consoleSystemPrefix[method].length);
+            }
+        }
+        return thisString.strip;
+        // may be a more advance SpeechRecognitionAlternative, if the below doesn't work:
+        // return thisString.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+    }
+}
 //#endregion
 
 //#region Read-only properties
@@ -556,6 +997,7 @@ if (String.prototype.markWhiteSpace == null) {
  * @type {string[]}
  */
 const readOnlyProperties = [];
+
 /**
  * Creates a read-only property on the `exports` object and optionally
  * adds the property name `p` to the `readOnlyProperties[]` array.
@@ -620,4 +1062,19 @@ exports.TerminalCanBlock = true;
 defineReadOnlyProperty('TerminalCanBlock', true, () => {
     return (process.stdin.setRawMode != undefined) && (!unhook_intercept) && (!runningInGitHub);
 });
+
+/**
+* @returns A string indicating which console platform has been evaluated
+automatically.
+ */
+exports.ConsolePlatform = '';
+defineReadOnlyProperty('ConsolePlatform', true, () => {
+    if (exports.RunningInGitHub) {
+        return 'github';
+    } else {
+        return os.platform();
+    }
+});
 //#endregion
+
+exports.ConsoleInit();

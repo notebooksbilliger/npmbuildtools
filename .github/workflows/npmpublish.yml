@@ -31,10 +31,13 @@ jobs:
       - name: Increment Package Version
         run: node -e "require('./lib/update-package-version').UpdatePackageVersion('.', 'patch')"
       - name: List all environment variables (temporarily)
-        run: set
+        run: |
+          set
+          hostname --fqdn
+          cat /etc/mailname
         shell: bash
       - run: git status
       - run: git add "package.json"
       - run: git status
-      - run: git commit -m "Automatic version patch increment after publish"
+      - run: git commit -m "Automatic version patch increment after publish" --author="$GITHUB_ACTOR <$USER@$HOSTNAME>"
       - run: git status

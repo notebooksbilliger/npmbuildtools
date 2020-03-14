@@ -1,6 +1,6 @@
 {
     "name": "@nbb.com/npmbuildtools",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "description": "Tools for use with npm package management.",
     "main": "index.js",
     "scripts": {
@@ -9,7 +9,7 @@
         "prebuild": "node -e \"require('./lib/declaration-files').RemoveDeclarations()\"",
         "build": "tsc -p tsconfig.build.json",
         "postbuild": "tsc -p tsconfig.json",
-        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.pretest', 'scripts.test', 'scripts.prebuild', 'scripts.build', 'scripts.postbuild', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { verbose: true })\"",
+        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.pretest', 'scripts.test', 'scripts.prebuild', 'scripts.build', 'scripts.postbuild', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { logLevel: 'verbose' })\"",
         "prepublishOnly": "node -e \"require('./lib/generate-adoc').GenerateReadme()\""
     },
     "keywords": [
@@ -39,6 +39,7 @@
         "tar4": "npm:tar@^4.4.13"
     },
     "devDependencies": {
+        "@types/colors": "^1.2.1",
         "@types/fs-extra": "^8.1.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "^13.9.0",
