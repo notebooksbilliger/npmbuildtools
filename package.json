@@ -1,6 +1,6 @@
 {
     "name": "@nbb.com/npmbuildtools",
-    "version": "2.2.0",
+    "version": "2.2.1",
     "description": "Tools for use with npm package management.",
     "main": "index.js",
     "scripts": {
@@ -30,9 +30,10 @@
         "test": "./test"
     },
     "dependencies": {
-        "diff": "^4.0.2",
         "colors": "^1.4.0",
+        "diff": "^4.0.2",
         "fs-extra": "^8.1.0",
+        "glob": "^7.1.6",
         "intercept-stdout": "^0.1.2",
         "semver": "^7.1.3",
         "tar": "^6.0.1",
@@ -41,6 +42,7 @@
     "devDependencies": {
         "@types/colors": "^1.2.1",
         "@types/fs-extra": "^8.1.0",
+        "@types/glob": "^7.1.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^13.9.1",
         "@types/semver": "^7.1.0",

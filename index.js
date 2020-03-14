@@ -419,7 +419,7 @@ exports.SliceArgv = (argv, file, noDefaultAll) => {
 //#region CheckReadme()
 /**
  * @typedef { import('./lib/generate-adoc').GenerateReadmeOptions } GenerateReadmeOptions
- * @param {string=} packagePath Defaults to `.`
+ * @param {string=} packagePath A path to the package root folder (defaults to `.`).
  * @param {string=} readmeFileName Defaults to `README.adoc`
  * @param {GenerateReadmeOptions=} options A `GenerateReadmeOptions` object
  */

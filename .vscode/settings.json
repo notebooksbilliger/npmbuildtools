@@ -1,5 +1,6 @@
 {
     "files.associations": {
       "*.atpl": "asciidoc"
-    }
+    },
+    "editor.foldingStrategy": "indentation"
 }

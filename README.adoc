@@ -4,7 +4,7 @@ npmbuildtools
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
 :Date: 2020-03-13
-:Revision: 2.2.0
+:Revision: 2.2.1
 :License: MIT
 
 - Version {revision}
