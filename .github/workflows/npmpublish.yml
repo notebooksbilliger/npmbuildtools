@@ -38,6 +38,10 @@ jobs:
           git status
           git add "package.json"
           git status
-          git commit -m "Automatic version patch increment after publish" --author="$GITHUB_ACTOR <$USER@$FQDN>"
+          git config --local --list
+          git config --local user.email "$USER@$FQDN"
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local --list
+          git commit -m "Automatic version patch increment after publish"
           git status
         shell: bash
