@@ -38,7 +38,7 @@ export var ConsoleLogLevel: {
 };
 export function ConsoleInit(platform?: "win32" | "github" | "other"): void;
 export function ConsoleReset(): void;
-export function ConsolePushOptions(consoleOptions: {
+export function ConsolePushOptions(consoleOptions?: {
     logLevel?: "default" | "debug" | "verbose";
     verbose?: boolean;
     debug?: boolean;

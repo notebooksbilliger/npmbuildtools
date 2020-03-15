@@ -3,8 +3,8 @@ npmbuildtools
 :Author: Thorben Wolkersdorfer
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
-:Date: 2020-03-13
-:Revision: 2.2.1
+:Date: 2020-03-15
+:Revision: 2.2.2
 :License: MIT
 
 - Version {revision}
@@ -203,3 +203,40 @@ messages in the GitHub Actions log view.
 
 This feature can also be used to _fake_ the output of other tools (like npm) for
 a consistent experience when reading verbose or debug level log information.
+
+Line continuation
+^^^^^^^^^^^^^^^^^
+Console formatting supports line continuation by inspecting the messages passed
+into the `console.[red]#<method>#()` methods a prefix has been defined for.
+
+* If the message ends with a `\b` (backspace) character, a space character
+will be appended to the output instead of a newline character sequence.
+* If the message starts with a `\b` (backspace) character, no prefixes will be
+applied to it.
+
+The respective leading or trailing `\b` characters (and only those) will be
+removed. All other characters will remain untouched (e.g. a `\b\b` ending would
+become a `\b` ending).
+
+[CAUTION]
+This isn't a perfect solution because there's no buffering or something else
+that would recognize which output belongs to which line, so keep in mind that
+the console gets messed up if multiple `async` functions _mix up_ their output!
+
+Example:
+[source,javascript]
+----
+console.info('Line to complete\b');
+console.info('\bon next call.');
+
+console.warn('Warning composed\b');
+console.warn('\bby more than\b');
+console.warn('\btwo calls.');
+
+console.info('Trying to do something ...\b');
+if (success) {
+    console.info('\bok.');
+} else {
+    console.error('\bfailed!')
+}
+----

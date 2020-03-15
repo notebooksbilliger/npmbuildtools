@@ -7,17 +7,17 @@ input, recommendation or correction is highly aprreciated.
 
 ToDos
 -----
-- Write some developer guidance.
-- Document feature **SliceArgv**
-- Document feature **AsciiDoc generation**
-- Document sub-feature **clean-package-elements** (in conjunction with
+* Write some developer guidance.
+* Document feature **SliceArgv**
+* Document feature **AsciiDoc generation**
+* Document sub-feature **clean-package-elements** (in conjunction with
 `PostPack()`)
-- Document `vc-utils`
-- Isolate and document **string extensions**
-- Mention Visual Studio Code related items (`--debug-vscode`, `launch.json`,
+* Document `vc-utils`
+* Isolate and document **string extensions**
+* Mention Visual Studio Code related items (`--debug-vscode`, `launch.json`,
 `settings.json`)
-- Facilitate recursive directory scans using the npm `glob` package.
-- Make Resolve() in `generate-adoc.js` agjust `link:` directives (i.e. let the
+* Facilitate recursive directory scans using the npm `glob` package.
+* Make Resolve() in `generate-adoc.js` agjust `link:` directives (i.e. let the
 author link to subpaths as needed to test and afterwards adjust the link
 subpath, if needed).
-- Make Resolve() in `generate-adoc.js` resolve `{attribute}` directives.
+* Make Resolve() in `generate-adoc.js` resolve `{attribute}` directives.
