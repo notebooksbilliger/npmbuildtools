@@ -253,7 +253,7 @@ function postPack(clientScripts, options) {
         console.debug(`Creating retention copy '${bakPath}' of decompression buffer '${tarPath}'.`);
         fs.copyFileSync(tarPath, bakPath);
         console.debug(`Exporting file list from retention copy '${tarPath}'.`);
-        fs.writeFileSync(`${bakPath}.list`, packageList.join('\n'));
+        fs.writeFileSync(`${bakPath}.list`, packageList.join(os.EOL));
         console.debug(`Exporting entries JSON from retention copy '${tarPath}'.`);
         fs.writeJSONSync(`${bakPath}.json`, packageListBin, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
     }
@@ -334,7 +334,7 @@ function postPack(clientScripts, options) {
             }
         });
         console.debug(`Exporting file list from compression buffer '${tarPath}'.`);
-        fs.writeFileSync(`${tarPath}.list`, tarList.join('\n'));
+        fs.writeFileSync(`${tarPath}.list`, tarList.join(os.EOL));
         console.debug(`Exporting entries JSON from compression buffer '${tarPath}'.`);
         fs.writeJSONSync(`${tarPath}.json`, tarListBin, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
     } else {
@@ -784,10 +784,19 @@ exports.ConsolePushPrefixes = (prefix) => {
         if (hide) {
             console[key] = (text) => { }
         } else {
-            if (key == 'error') {
-                console[key] = (text) => { process.stderr.write(`${consoleSystemPrefix[key]}` + `${prefix[key]}${text}`[key] + `\n`) }
-            } else {
-                console[key] = (text) => { process.stdout.write(`${consoleSystemPrefix[key]}` + `${prefix[key]}${text}`[key] + `\n`) }
+            var stream = (key == 'error') ? 'stderr' : 'stdout';
+            /**@param {string} text */
+            console[key] = (text) => {
+                var eol = os.EOL;
+                if (text.endsWith('\b')) {
+                    eol = ' ';
+                    text = text.substr(0, text.length -1);
+                }
+                if (text.startsWith('\b')) {
+                    process[stream].write(`${text.substr(1)}`[key] + eol);
+                } else {
+                    process[stream].write(`${consoleSystemPrefix[key]}` + `${prefix[key]}${text}`[key] + eol);
+                }
             }
         }
     });

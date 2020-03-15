@@ -20,7 +20,4 @@ ToDos
 * Make Resolve() in `generate-adoc.js` agjust `link:` directives (i.e. let the
 author link to subpaths as needed to test and afterwards adjust the link
 subpath, if needed).
-* Add support for line continuation in console formatting, maybe
-** Use \b at beginning of text to skip (all!) prefixes
-** Use \b at end of text to prevent \n
 * Make Resolve() in `generate-adoc.js` resolve `{attribute}` directives.
