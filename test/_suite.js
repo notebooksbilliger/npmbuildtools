@@ -272,7 +272,7 @@ describe(`${thisPackage.name} declaration-files tests`, function () {
 
         btools.ConsoleCaptureStart();
         try {
-            result = deffiles.RemoveDeclarations(undefined, { dryRun: true, consoleOptions: { logLevel: 'verbose' } });
+            result = deffiles.RemoveDeclarations(undefined, { dryRun: true, consoleOptions: { logLevel: 'debug' } });
             btools.ConsoleCaptureStop();
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -285,6 +285,7 @@ describe(`${thisPackage.name} declaration-files tests`, function () {
         // @ts-ignore
         assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Removed ${result} declaration files (*.d.ts) from path '${path.resolve('.')}'.${os.EOL}`, `stdout second line should contain`);
         assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+        
         done();
     });
 });

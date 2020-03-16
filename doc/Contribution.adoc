@@ -16,7 +16,6 @@ ToDos
 * Isolate and document **string extensions**
 * Mention Visual Studio Code related items (`--debug-vscode`, `launch.json`,
 `settings.json`)
-* Facilitate recursive directory scans using the npm `glob` package.
 * Make Resolve() in `generate-adoc.js` agjust `link:` directives (i.e. let the
 author link to subpaths as needed to test and afterwards adjust the link
 subpath, if needed).

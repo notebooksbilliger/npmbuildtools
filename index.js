@@ -3,6 +3,7 @@ const cp = require('child_process');
 const os = require('os');
 const fs = require('fs-extra');
 const path = require('path');
+const glob = require('glob');
 const zlib = require('zlib');
 const diff = require('diff');
 const semver = require('semver');
@@ -290,20 +291,7 @@ function postPack(clientScripts, options) {
             console.debug(`File '${file}' no longer exists in '${wrkDir}' and will be removed from the package archive.`);
         }
     });
-    function readDirRecurseSync(dir, prefix) {
-        var list = [];
-        fs.readdirSync(dir).forEach(de => {
-            var relativePath = path.join(prefix || '', de);
-            var absolutePath = path.join(dir, de);
-            if (fs.lstatSync(absolutePath).isDirectory()) {
-                list = list.concat(readDirRecurseSync(absolutePath, relativePath));
-            } else {
-                list.push(relativePath.replace(/\\/g, '/'));
-            }
-        });
-        return list;
-    }
-    readDirRecurseSync(wrkDir).forEach(file => {
+    glob.sync('**/*', { cwd: wrkDir, nodir: true }).forEach(file => {
         if (!fileList.includes(file))
         {
             console.debug(`File '${file}' is new in '${wrkDir}' and will be included in the package archive.`);
