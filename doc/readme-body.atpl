@@ -1,6 +1,7 @@
 Usage
 -----
-Specify the tools in the `scripts` section of the `package.json` package file, like so:
+Specify the tools in the `scripts` section of the `package.json` package file,
+like so:
 [source,json]
 ----
 include::example.package.json[]
@@ -12,33 +13,40 @@ Yes, of course, please see link:doc/Contribution.adoc[]!
 
 Features
 --------
-This is a collection of functions that turned out to be useful during the development, testing and publishing of node packages.
+This is a collection of functions that turned out to be useful during the
+development, testing and publishing of node packages.
 
 npm postpack Support
 ~~~~~~~~~~~~~~~~~~~~
 :packagefile: <name>-<version>.tgz
-When issuing `npm pack`, it may be desirable to control what is packed, beyond of what is already possible
-using `.npmignore` files and the like (e.g. make changes to or check the contents of `package.json`
-or check, change or add other files).
+When issuing `npm pack`, it may be desirable to control what is packed, beyond
+of what is already possible using `.npmignore` files and the like (e.g. make
+changes to or check the contents of `package.json` or check, change or add other
+files).
 
-When doing this in the working tree, changes may not be applied due to `npm` re-reading `package.json`
-after several steps. The only solution for this seems to be applying changes to a temporary directory
-and then repackage the package file `npm pack` has created before.
+When doing this in the working tree, changes may not be applied due to `npm`
+re-reading `package.json` after several steps. The only solution for this seems
+to be applying changes to a temporary directory and then repackage the package
+file `npm pack` has created before.
 
-The `PostPack()` function provides you with an opportunity to do so. It is usually called after the package
-file (`{packagefile}`) has been created, e.g. as part of the `scripts.postpack` element of `package.json`.
-It then decompresses the file to a temporary folder, calls the commands provided in the `clientScripts`
-parameter and afterwards compresses the temporary folder to a new `{packagefile}` file, which will
-overwrite the existing package file.
+The `PostPack()` function provides you with an opportunity to do so. It is
+usually called after the package file (`{packagefile}`) has been created, e.g.
+as part of the `scripts.postpack` element of `package.json`. It then
+decompresses the file to a temporary folder, calls the commands provided in the
+`clientScripts` parameter and afterwards compresses the temporary folder to a
+new `{packagefile}` file, which will overwrite the existing package file.
 
 .npm publish
 [NOTE]
 ====
-If putting the call of `PostPack()` in the `scripts.postpack` element of `package.json`, `npm publish`, called
-without any further parameters will fail due to NOT creating an intermediate package file (`{packagefile}`),
-which `PostPack()` relies on (and therefore fails). To resolve this, `PostPack()` stores the full path and name
-of the package file (`{packagefile}`) in both, an environment variable `NPM_TARBALL` as well as a file `NPM_TARBALL` in the
-working tree. This way, automation doesn't need to care about the currently applicable name of the package file.
+If putting the call of `PostPack()` in the `scripts.postpack` element of
+`package.json`, `npm publish`, called without any further parameters will fail
+due to NOT creating an intermediate package file (`{packagefile}`), which
+`PostPack()` relies on (and therefore fails). To resolve this, `PostPack()`
+stores the full path and name of the package file (`{packagefile}`) in both, an
+environment variable `NPM_TARBALL` as well as a file `NPM_TARBALL` in the
+working tree. This way, automation doesn't need to care about the currently
+applicable name of the package file.
 
 To publish your package, use the following command sequence:
 [source, bash]
@@ -51,34 +59,43 @@ npm publish "$NPM_TARBALL"
 
 Global Dependencies Checks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-Packages may depend on other packages that are usually installed globally (e.g. typescript). Instead of adding
-those packages to the `dependencies` element of `package.json` (which more or less slows down `npm install`),
-we add `check-global.deps` in the `scripts.postinstall` element of `package.json` (see <<Usage>>) to make
-`npm` check for those packes and warn us if these packages aren't installed globally, along with a short hint
-on how to install them, respectively.
+Packages may depend on other packages that are usually installed globally
+(e.g. typescript). Instead of adding those packages to the `dependencies`
+element of `package.json` (which more or less slows down `npm install`), we add
+`check-global.deps` in the `scripts.postinstall` element of `package.json` (see
+<<Usage>>) to make `npm` check for those packes and warn us if these packages
+aren't installed globally, along with a short hint on how to install them,
+respectively.
 
 Automatic Version Update
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Publishing to https://www.npmjs.com[npmjs] requires the package version to be unique - if you publish a package
-without having changed the package version in `package.json`, `npm publish` fails because the version already
-exists. Incrementing the package version automatically is tricky because it's hard to determine which release
-type you're dealing with - `major`, `minor`, `package` or others.
+Publishing to https://www.npmjs.com[npmjs] requires the package version to be
+unique - if you publish a package without having changed the package version in
+`package.json`, `npm publish` fails because the version already exists.
+Incrementing the package version automatically is tricky because it's hard to
+determine which release type you're dealing with - `major`, `minor`, `package`
+or others.
 
-One way to overcome this is to increase the package version patch number right *after* publishing from the
-`master` branch. This causes the next pull request to give a hint that the source branch and the `master`
-branch need to be merged first, which provides an opportunity to determine the 'right' or 'best' version change.
+One way to overcome this is to increase the package version patch number right
+*after* publishing from the `master` branch. This causes the next pull request
+to give a hint that the source branch and the `master` branch need to be merged
+first, which provides an opportunity to determine the 'right' or 'best' version
+change.
 
-The `UpdatePackageVersion()` function in `lib/update-package-version.js` encapsulates the process of reading
-`packge.json`, updating the version number and writing `package.json` back to disk.
+The `UpdatePackageVersion()` function in `lib/update-package-version.js`
+encapsulates the process of reading `packge.json`, updating the version number
+and writing `package.json` back to disk.
 
 Fallback Readme Creation
 ~~~~~~~~~~~~~~~~~~~~~~~~
-In https://www.npmjs.com[npmjs], there's no support for rendering AsciiDoc README files, and setting the
-"readme" element in `package.json` also has no effect (to see it in raw format at least).
+In https://www.npmjs.com[npmjs], there's no support for rendering AsciiDoc
+README files, and setting the "readme" element in `package.json` also has no
+effect (to see it in raw format at least).
 
-The `CreateFallbackReadme()` function in `lib/create-fallback-readme.js` creates a fallback `README.md`
-file and can be called as a script in `PostPack()`, which will inject this file in the packge to be
-published while not having it in project itself. See how to use it in conjuction with `PostPack()` in the
+The `CreateFallbackReadme()` function in `lib/create-fallback-readme.js` creates
+a fallback `README.md` file and can be called as a script in `PostPack()`, which
+will inject this file in the packge to be published while not having it in
+project itself. See how to use it in conjuction with `PostPack()` in the
 <<Usage>> example `package.json` .
 
 Type Declarations Support
@@ -90,31 +107,38 @@ existing declaration files. Useful for all who lost the fight against the
 
 Console Capturing
 ~~~~~~~~~~~~~~~~~
-During tests, output from the tested functions are sometimes unwanted. Most of the time, a plain and simple
-output is required that just tells if all tests have completed successfully or not. *npmbuildtools* provide a
-set of functions and properties to accomplish this: The `ConsoleCaptureStart()` and `ConsoleCaptureStop()`
-functions allow for suppressing output while capturing it in the `stdout` and `stderr` properties.
+During tests, output from the tested functions are sometimes unwanted. Most of
+the time, a plain and simple output is required that just tells if all tests
+have completed successfully or not. *npmbuildtools* provide a set of functions
+and properties to accomplish this: The `ConsoleCaptureStart()` and
+`ConsoleCaptureStop()` functions allow for suppressing output while capturing it
+in the `stdout` and `stderr` properties.
 
-If the `DebugMode` property evaluates to `true`, captured output will automatically be forwarded to the console,
-otherwise it will be suppressed.
+If the `DebugMode` property evaluates to `true`, captured output will
+automatically be forwarded to the console, otherwise it will be suppressed.
 
-To enforce proper capturing start and stop, it cannot be started or stopped more than once at a time (i.e.
-if you start or stop capturing, and then try to start or stop captuing another time, an error will be genereated).
-If capturing has been started, it must be stopped first before you can start capturing again.
-If capturing has been stopped, it must be started first before you can stop capturing again.
+To enforce proper capturing start and stop, it cannot be started or stopped more
+than once at a time (i.e. if you start or stop capturing, and then try to start
+or stop captuing another time, an error will be genereated). If capturing has
+been started, it must be stopped first before you can start capturing again. If
+capturing has been stopped, it must be started first before you can stop
+capturing again.
 
-Due to all output being captured, you may of course also miss output of severe errors that stop the whole
-testing process, and therefore don't recognize something is wrong. The following pattern(s) have been tried
-while using mocha for unit testing and are most promising to get everything right.
+Due to all output being captured, you may of course also miss output of severe
+errors that stop the whole testing process, and therefore don't recognize
+something is wrong. The following pattern(s) have been tried while using mocha
+for unit testing and are most promising to get everything right.
 
-If you expect a function to fail, use the classic pattern and place the capture support function accordingly:
+If you expect a function to fail, use the classic pattern and place the capture
+support function accordingly:
 [source,javascript]
 ----
 include::example.test-fail.js[]
 ----
 
-If you expect a function to succeed, you also have to use the classic 'fail' pattern because if the function
-fails unexpectedly, or even crashed the whole test run, you wouldn't get aware of it:
+If you expect a function to succeed, you also have to use the classic 'fail'
+pattern because if the function fails unexpectedly, or even crashed the whole
+test run, you wouldn't get aware of it:
 [source,javascript]
 ----
 include::example.test-succeed.js[]
