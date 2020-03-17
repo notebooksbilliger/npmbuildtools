@@ -3,8 +3,8 @@ npmbuildtools
 :Author: Thorben Wolkersdorfer
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
-:Date: 2020-03-16
-:Revision: 2.2.3
+:Date: 2020-03-17
+:Revision: 2.2.4
 :License: MIT
 
 - Version {revision}
@@ -224,6 +224,9 @@ used:
 - When run as part of a GitHub Workflow, debug, warning and error information
 will be prefixed accordingly to actually appear as debug, warning or error
 messages in the GitHub Actions log view.
+- When run as part of an Azure DevOps Pipeline, debug, warning and error
+information will be prefixed accordingly to actually appear as debug, warning or
+error messages in the GitHub Actions log view.
 
 This feature can also be used to _fake_ the output of other tools (like npm) for
 a consistent experience when reading verbose or debug level log information.
