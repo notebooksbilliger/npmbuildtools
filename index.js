@@ -3,6 +3,7 @@ const cp = require('child_process');
 const os = require('os');
 const fs = require('fs-extra');
 const path = require('path');
+const glob = require('glob');
 const zlib = require('zlib');
 const diff = require('diff');
 const semver = require('semver');
@@ -290,20 +291,7 @@ function postPack(clientScripts, options) {
             console.debug(`File '${file}' no longer exists in '${wrkDir}' and will be removed from the package archive.`);
         }
     });
-    function readDirRecurseSync(dir, prefix) {
-        var list = [];
-        fs.readdirSync(dir).forEach(de => {
-            var relativePath = path.join(prefix || '', de);
-            var absolutePath = path.join(dir, de);
-            if (fs.lstatSync(absolutePath).isDirectory()) {
-                list = list.concat(readDirRecurseSync(absolutePath, relativePath));
-            } else {
-                list.push(relativePath.replace(/\\/g, '/'));
-            }
-        });
-        return list;
-    }
-    readDirRecurseSync(wrkDir).forEach(file => {
+    glob.sync('**/*', { cwd: wrkDir, nodir: true }).forEach(file => {
         if (!fileList.includes(file))
         {
             console.debug(`File '${file}' is new in '${wrkDir}' and will be included in the package archive.`);
@@ -563,7 +551,7 @@ var consoleThemes = [];
  * A list of supported console platforms. These values are valid parameters for
  * `ConsoleInit()`.
  */
-exports.ConsoleSupportedPlatforms = ['github', 'win32', 'other', undefined];
+exports.ConsoleSupportedPlatforms = ['github', 'devops', 'win32', 'other', undefined];
 /**
  * A list of default methods on the `console` object.
  */
@@ -616,8 +604,8 @@ exports.ConsoleLogLevel = {
 
 /**
  * Resets and initializes the `console` object.
- * @param {('github'|'win32'|'other')=} platform The platform `console` output
- * is meant to look like. If omitted, the platform will be evaluated
+ * @param {('github'|'devops'|'win32'|'other')=} platform The platform `console`
+ * output is meant to look like. If omitted, the platform will be evaluated
  * automatically.
  */
 exports.ConsoleInit = (platform) => {
@@ -647,6 +635,26 @@ exports.ConsoleInit = (platform) => {
                 info: '',
                 warn: '::warning::',
                 error: '::error::',
+            });
+            break;
+        case 'devops':
+            exports.ConsolePushTheme({
+                silly: 'rainbow',
+                input: 'grey',
+                verbose: 'strip',
+                prompt: 'grey',
+                info: 'strip',
+                data: 'grey',
+                help: 'cyan',
+                warn: 'strip',
+                debug: 'strip',
+                error: 'strip',
+            });
+            exports.ConsolePushSystemPrefixes({
+                debug: '##vso[task.debug]',
+                info: '',
+                warn: '##vso[task.logissue type=warning]',
+                error: '##vso[task.logissue type=error]',
             });
             break;
         case 'win32':
@@ -1046,14 +1054,24 @@ defineReadOnlyProperty('ReadOnlyProperties', false, () => readOnlyProperties);
 /** Internal, initialized on module load */
 const runningInGitHub = !(process.env['GITHUB_WORKFLOW'] == undefined);
 /**
- * @returns A value indicating if the module is running
- * as part of a GitHub Action workflow.
+ * @returns A value indicating if the module is running as part of a GitHub
+ * Action workflow.
  */
 exports.RunningInGitHub = false;
 defineReadOnlyProperty('RunningInGitHub', true, () => runningInGitHub);
 
 /** Internal, initialized on module load */
-const debugMode = (process.env['ACTIONS_STEP_DEBUG'] && `${process.env['ACTIONS_STEP_DEBUG']}`.toLowerCase() == 'true')
+const runningInDevOps = !(process.env['AGENT_ID'] == undefined);
+/**
+ * @returns A value indicating if the module is running as part of an Azure
+ * DevOps task.
+ */
+exports.RunningInDevOps = false;
+defineReadOnlyProperty('RunningInDevOps', true, () => runningInDevOps);
+
+/** Internal, initialized on module load */
+const debugMode = (process.env['ACTIONS_STEP_DEBUG'] && `${process.env['ACTIONS_STEP_DEBUG']}`.toLowerCase() == 'true') // applies to GitHub Actions
+               || (process.env['SYSTEM_DEBUG'] && `${process.env['SYSTEM_DEBUG']}`.toLowerCase() == 'true')             // applies to Azure DevOps Pipelines
                || (process.argv && process.argv.includes('--vscode-debug'));
 /**
 * @returns A value indicating if the module is running
@@ -1080,9 +1098,13 @@ exports.ConsolePlatform = '';
 defineReadOnlyProperty('ConsolePlatform', true, () => {
     if (exports.RunningInGitHub) {
         return 'github';
-    } else {
-        return os.platform();
     }
+
+    if (exports.RunningInDevOps) {
+        return 'devops';
+    }
+
+    return os.platform();
 });
 //#endregion
 

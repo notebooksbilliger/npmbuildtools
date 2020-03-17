@@ -36,7 +36,7 @@ export var ConsoleLogLevel: {
         debug?: boolean;
     };
 };
-export function ConsoleInit(platform?: "win32" | "github" | "other"): void;
+export function ConsoleInit(platform?: "win32" | "github" | "devops" | "other"): void;
 export function ConsoleReset(): void;
 export function ConsolePushOptions(consoleOptions?: {
     logLevel?: "default" | "debug" | "verbose";
@@ -56,6 +56,7 @@ export function ConsolePushTheme(theme?: any): void;
 export function ConsolePopTheme(): void;
 export var ReadOnlyProperties: string[];
 export var RunningInGitHub: boolean;
+export var RunningInDevOps: boolean;
 export var DebugMode: boolean;
 export var TerminalCanBlock: boolean;
 export var ConsolePlatform: string;

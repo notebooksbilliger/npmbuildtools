@@ -28,20 +28,17 @@ jobs:
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+      - name: Get full git commit history
+        run: |
+          git fetch --unshallow
+          git checkout --force master
       - name: Increment Package Version
         run: node -e "require('./lib/update-package-version').UpdatePackageVersion('.', 'patch')"
       - name: Commit
         run: |
           export FQDN=$(hostname --fqdn)
-          set
-          hostname --fqdn
-          git status
           git add "package.json"
-          git status
-          git config --local --list
           git config --local user.email "$USER@$FQDN"
           git config --local user.name "$GITHUB_ACTOR"
-          git config --local --list
           git commit -m "Automatic version patch increment after publish"
-          git status
         shell: bash
