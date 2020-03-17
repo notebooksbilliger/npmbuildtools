@@ -20,3 +20,4 @@ ToDos
 author link to subpaths as needed to test and afterwards adjust the link
 subpath, if needed).
 * Make Resolve() in `generate-adoc.js` resolve `{attribute}` directives.
+* Make Resolve() in `generate-adoc.js` resolve `[blue]#color#` directives.
