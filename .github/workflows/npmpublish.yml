@@ -28,13 +28,13 @@ jobs:
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
-     - name: Get full git commit history
+      - name: Get full git commit history
         run: |
           git fetch --unshallow
           git checkout --force master
-     - name: Increment Package Version
+      - name: Increment Package Version
         run: node -e "require('./lib/update-package-version').UpdatePackageVersion('.', 'patch')"
-     - name: Commit
+      - name: Commit
         run: |
           export FQDN=$(hostname --fqdn)
           git add "package.json"
