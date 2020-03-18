@@ -655,6 +655,58 @@ describe(`${thisPackage.name} UpdatePackageVersion() tests`, function () {
     });
 });
 
+describe(`${thisPackage.name} TfxIgnore() tests`, function () {
+    const tfxutils = require('../lib/tfx-utils');
+
+    it('should fail', (done) => {
+        btools.ConsoleCaptureStart();
+        try {
+            tfxutils.TfxIgnore();
+            assert.fail('should have failed');
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `VSIX package file '${path.resolve('../vss-extension.json')}' could not be found.`, `Error message should be`)
+        }
+
+        done();
+    });
+
+    it('should succeed', (done) => {
+        var vsixFileIn = './test/vss-extension.json';
+        var vsixFileOut = './test/vss-extension.resolved.json';
+
+        if (fs.existsSync(vsixFileIn)) {
+            fs.removeSync(vsixFileIn);
+        }
+        var vsixJson = { files: [ { path: '.' } ]}
+        fs.writeJSONSync(vsixFileIn, vsixJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+
+        btools.ConsoleCaptureStart();
+        try {
+            tfxutils.TfxIgnore(vsixFileIn, undefined, { logLevel: 'debug' });
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        assert.ok(fs.existsSync(vsixFileOut), `File '${vsixFileOut}' sould exist`);
+        fs.removeSync(vsixFileOut);
+        assert.ok(fs.existsSync(vsixFileIn), `File '${vsixFileIn}' sould (still) exist`);
+        fs.removeSync(vsixFileIn);
+
+        assert.ok(btools.stdout.length >= 2, `stdout should contain two or more lines:${os.EOL}${btools.stdout.join('')}`);
+        // @ts-ignore
+        assert.equal(btools.stdout[0].plain('info'), `Processing VSIX package file '${path.resolve(vsixFileIn)}'.${os.EOL}`, `stdout first  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Successfully updated VSIX package file '${path.resolve(vsixFileOut)}'.${os.EOL}`, `stdout second line should contain`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+
+        done();
+    });
+});
+
 describe(`${thisPackage.name} Readme should be up to date`, function() {
     it('CheckReadme() should succeed', function(done) {
         var packagePath = path.resolve('.');

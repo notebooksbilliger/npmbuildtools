@@ -13,6 +13,8 @@ ToDos
 * Document sub-feature **clean-package-elements** (in conjunction with
 `PostPack()`)
 * Document `vc-utils`
+* Document `glob-ignore`
+* Document `tfx-utils`
 * Isolate and document **string extensions**
 * Mention Visual Studio Code related items (`--debug-vscode`, `launch.json`,
 `settings.json`)
