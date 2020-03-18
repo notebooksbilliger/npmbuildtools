@@ -707,6 +707,89 @@ describe(`${thisPackage.name} TfxIgnore() tests`, function () {
     });
 });
 
+describe(`${thisPackage.name} TfxMkboot() tests`, function () {
+    const tfxutils = require('../lib/tfx-utils');
+
+    it('should fail', (done) => {
+        btools.ConsoleCaptureStart();
+        try {
+            tfxutils.TfxMkboot();
+            assert.fail('should have failed');
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            assert.ok(err instanceof Error, `'err' should be an Error object`);
+            assert.equal(err.message, `Task file '${path.resolve('./task.json')}' could not be found.`, `Error message should be`)
+        }
+
+        done();
+    });
+
+    it('should succeed', (done) => {
+        var packagePath = path.resolve('./test');
+        var packageJsonFile = path.resolve(packagePath, 'package.json');
+        var taskJsonFile = path.resolve(packagePath, 'task.json');
+        var bootFile = path.resolve(packagePath, 'boot.js');
+
+        var tempPackageName = 'Test Package';
+        if (fs.existsSync(packageJsonFile)) {
+            fs.removeSync(packageJsonFile);
+        }
+        var PckgJson = {
+            main: 'index.js',
+            version: '4.5.6',
+        }
+        fs.writeJSONSync(packageJsonFile, PckgJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+
+        if (fs.existsSync(taskJsonFile)) {
+            fs.removeSync(taskJsonFile);
+        }
+        var taskJson = {
+            id: 'Test-Package-Id',
+            name: tempPackageName,
+            version: {
+                Major: 1,
+                Minor: 2,
+                Patch: 3,
+            },
+            execution: {
+                Node10: {
+                    target: 0
+                }
+            }
+        }
+        fs.writeJSONSync(taskJsonFile, taskJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+
+        if (fs.existsSync(bootFile)) {
+            fs.removeSync(bootFile);
+        }
+
+        btools.ConsoleCaptureStart();
+        try {
+            tfxutils.TfxMkboot(packagePath, undefined, { logLevel: 'debug' }, 'command1', 'command2');
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        assert.ok(fs.existsSync(bootFile), `File '${bootFile}' sould exist`);
+        fs.removeSync(bootFile);
+        assert.ok(fs.existsSync(packageJsonFile), `File '${packageJsonFile}' sould (still) exist`);
+        fs.removeSync(packageJsonFile);
+        assert.ok(fs.existsSync(taskJsonFile), `File '${taskJsonFile}' sould (still) exist`);
+        fs.removeSync(taskJsonFile);
+
+        assert.ok(btools.stdout.length >= 2, `stdout should contain two or more lines:${os.EOL}${btools.stdout.join('')}`);
+        // @ts-ignore
+        assert.equal(btools.stdout[0].plain('info'), `Processing package in '${packagePath}'.${os.EOL}`, `stdout first  line should contain`);
+        // @ts-ignore
+        assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Finished processing package '${tempPackageName}' in '${packagePath}'.${os.EOL}`, `stdout second line should contain`);
+        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+
+        done();
+    });
+});
+
 describe(`${thisPackage.name} Readme should be up to date`, function() {
     it('CheckReadme() should succeed', function(done) {
         var packagePath = path.resolve('.');
