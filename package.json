@@ -1,6 +1,6 @@
 {
     "name": "@nbb.com/npmbuildtools",
-    "version": "2.2.5",
+    "version": "2.2.6",
     "description": "Tools for use with npm package management.",
     "main": "index.js",
     "scripts": {
