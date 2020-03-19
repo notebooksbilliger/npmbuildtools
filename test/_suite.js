@@ -2,6 +2,7 @@ const os = require('os');
 const fs = require('fs-extra');
 const path = require('path');
 const assert = require('assert');
+const semver = require('semver');
 const btools = require('../index');
 // @ts-ignore
 const thisPackage = require('../package.json');
@@ -691,9 +692,9 @@ describe(`${thisPackage.name} TfxIgnore() tests`, function () {
             throw err;
         }
 
-        assert.ok(fs.existsSync(vsixFileOut), `File '${vsixFileOut}' sould exist`);
+        assert.ok(fs.existsSync(vsixFileOut), `File '${vsixFileOut}' should exist`);
         fs.removeSync(vsixFileOut);
-        assert.ok(fs.existsSync(vsixFileIn), `File '${vsixFileIn}' sould (still) exist`);
+        assert.ok(fs.existsSync(vsixFileIn), `File '${vsixFileIn}' should (still) exist`);
         fs.removeSync(vsixFileIn);
 
         assert.ok(btools.stdout.length >= 2, `stdout should contain two or more lines:${os.EOL}${btools.stdout.join('')}`);
@@ -713,7 +714,7 @@ describe(`${thisPackage.name} TfxMkboot() tests`, function () {
     it('should fail', (done) => {
         btools.ConsoleCaptureStart();
         try {
-            tfxutils.TfxMkboot();
+            tfxutils.TfxMkboot2();
             assert.fail('should have failed');
         } catch(err) {
             btools.ConsoleCaptureStop();
@@ -725,24 +726,28 @@ describe(`${thisPackage.name} TfxMkboot() tests`, function () {
     });
 
     it('should succeed', (done) => {
-        var packagePath = path.resolve('./test');
+        var tempPath = fs.mkdtempSync(path.join(os.tmpdir(), '_temp_npmbuildtools-'));
+        var extensionJsonFile = path.resolve(tempPath, 'vss-extension.json');
+        var packagePath = path.resolve(tempPath, 'test'); fs.ensureDirSync(packagePath);
         var packageJsonFile = path.resolve(packagePath, 'package.json');
         var taskJsonFile = path.resolve(packagePath, 'task.json');
         var bootFile = path.resolve(packagePath, 'boot.js');
 
         var tempPackageName = 'Test Package';
-        if (fs.existsSync(packageJsonFile)) {
-            fs.removeSync(packageJsonFile);
+
+        var extensionJson = {
+            publisher: "testpublisher",
+            id: "test-extension-id",
+            version: "0.0.1",
         }
+        fs.writeJSONSync(extensionJsonFile, extensionJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+
         var PckgJson = {
             main: 'index.js',
             version: '4.5.6',
         }
         fs.writeJSONSync(packageJsonFile, PckgJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
 
-        if (fs.existsSync(taskJsonFile)) {
-            fs.removeSync(taskJsonFile);
-        }
         var taskJson = {
             id: 'Test-Package-Id',
             name: tempPackageName,
@@ -759,25 +764,37 @@ describe(`${thisPackage.name} TfxMkboot() tests`, function () {
         }
         fs.writeJSONSync(taskJsonFile, taskJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
 
-        if (fs.existsSync(bootFile)) {
-            fs.removeSync(bootFile);
-        }
-
         btools.ConsoleCaptureStart();
         try {
-            tfxutils.TfxMkboot(packagePath, undefined, { logLevel: 'debug' }, 'command1', 'command2');
+            tfxutils.TfxMkboot2({ packagePath: packagePath, incrementReleaseType: 'minor', consoleOptions: { logLevel: 'debug' } }, 'command1', 'command2');
             btools.ConsoleCaptureStop();
         } catch(err) {
             btools.ConsoleCaptureStop();
             throw err;
         }
 
-        assert.ok(fs.existsSync(bootFile), `File '${bootFile}' sould exist`);
-        fs.removeSync(bootFile);
-        assert.ok(fs.existsSync(packageJsonFile), `File '${packageJsonFile}' sould (still) exist`);
-        fs.removeSync(packageJsonFile);
-        assert.ok(fs.existsSync(taskJsonFile), `File '${taskJsonFile}' sould (still) exist`);
-        fs.removeSync(taskJsonFile);
+        assert.ok(fs.existsSync(bootFile), `File '${bootFile}' should exist`);
+        assert.ok(fs.existsSync(extensionJsonFile), `File '${extensionJsonFile}' should (still) exist`);
+        assert.ok(fs.existsSync(packageJsonFile), `File '${packageJsonFile}' should (still) exist`);
+        assert.ok(fs.existsSync(taskJsonFile), `File '${taskJsonFile}' should (still) exist`);
+
+        PckgJson.version = semver.inc(PckgJson.version, 'patch');
+        fs.writeJSONSync(packageJsonFile, PckgJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+
+        btools.ConsoleCaptureStart();
+        try {
+            tfxutils.TfxMkboot2({ packagePath: packagePath, incrementReleaseType: 'minor', consoleOptions: { logLevel: 'debug' } }, 'command1', 'command2');
+            btools.ConsoleCaptureStop();
+        } catch(err) {
+            btools.ConsoleCaptureStop();
+            throw err;
+        }
+
+        assert.ok(fs.existsSync(bootFile), `File '${bootFile}' should (still) exist`);
+        assert.ok(fs.existsSync(extensionJsonFile), `File '${extensionJsonFile}' should (still) exist`);
+        assert.ok(fs.existsSync(packageJsonFile), `File '${packageJsonFile}' should (still) exist`);
+        assert.ok(fs.existsSync(taskJsonFile), `File '${taskJsonFile}' should (still) exist`);
+        fs.removeSync(tempPath);
 
         assert.ok(btools.stdout.length >= 2, `stdout should contain two or more lines:${os.EOL}${btools.stdout.join('')}`);
         // @ts-ignore

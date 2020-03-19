@@ -60,9 +60,9 @@ if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
 //#region NPM console
  /**
   * Configures the `console` object for npm-like output. Call this function if
-  * you have an `ConsoleOptions` in place and want your output to look like npm
-  * output. When finished, call `consoleResetNPM()` to revert `console` to it's
-  * prior state.
+  * you have a `ConsoleOptions` object in place and want your output to look
+  * like npm output. When finished, call `consoleResetNPM()` to revert `console`
+  * to it's prior state.
   * @param {ConsoleOptions} consoleOptions A `ConsoleOptions` object.
   * @returns {ConsoleOptions} A safeguarded `ConsoleOptions` object.
   */
