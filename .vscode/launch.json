@@ -18,7 +18,9 @@
             ],
             "outFiles": [
                 "${workspaceFolder}/**"
-            ]
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
         },
         {
             "type": "node",
