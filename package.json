@@ -51,8 +51,8 @@
     "semistandard": {
         "ignore": [
             "**/lib/*",
-            "**/doc/*",
-            "**/test/*"
-        ]
+            "**/doc/*"
+        ],
+        "env": "mocha"
     }
 }

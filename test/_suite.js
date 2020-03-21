@@ -8,824 +8,816 @@ const btools = require('../index');
 const thisPackage = require('../package.json');
 
 if (btools.TerminalCanBlock) {
-    console.log('\u001b[2J'); // clear screen
+  console.log('\u001b[2J'); // clear screen
 }
 
 console.log(`${os.EOL}Running Mocha Test Suite ...`);
 
 describe(`${thisPackage.name} read-only properties`, function () {
-    it(`should be listed accurately`, (done) => {
-        var table = [];
-        btools.ReadOnlyProperties.forEach(prop => {
-            console.log(`      ${prop}\t= ${btools[prop]}\t(${typeof(btools[prop])})`);
-            table.push({ name: prop, value: btools[prop], type: typeof(btools[prop]) });
-        });
-        // console.log(table);
-        done();
+  it('should be listed accurately', (done) => {
+    var table = [];
+    btools.ReadOnlyProperties.forEach(prop => {
+      console.log(`      ${prop}\t= ${btools[prop]}\t(${typeof (btools[prop])})`);
+      table.push({ name: prop, value: btools[prop], type: typeof (btools[prop]) });
     });
+
+    done();
+  });
 });
 
 describe(`${thisPackage.name} Console tests`, function () {
-    it('ConsoleLogLevel.Validate() should succeed', done => {
-        /**
-         * @type {import('../index').ConsoleOptions}
-         */
-        var consoleOptions;
+  it('ConsoleLogLevel.Validate() should succeed', done => {
+    /** @type {import('../index').ConsoleOptions} */
+    var consoleOptions;
 
-        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default' });
-        assert.equal(consoleOptions.verbose, false, `'verbose' should have value`);
-        assert.equal(consoleOptions.debug, false, `'debug' should have value`);
+    consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default' });
+    assert.strictEqual(consoleOptions.verbose, false, '\'verbose\' should have value');
+    assert.strictEqual(consoleOptions.debug, false, '\'debug\' should have value');
 
-        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'verbose' });
-        assert.equal(consoleOptions.verbose, true, `'verbose' should have value`);
-        assert.equal(consoleOptions.debug, false, `'debug' should have value`);
+    consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'verbose' });
+    assert.strictEqual(consoleOptions.verbose, true, '\'verbose\' should have value');
+    assert.strictEqual(consoleOptions.debug, false, '\'debug\' should have value');
 
-        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'debug' });
-        assert.equal(consoleOptions.verbose, true, `'verbose' should have value`);
-        assert.equal(consoleOptions.debug, true, `'debug' should have value`);
+    consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'debug' });
+    assert.strictEqual(consoleOptions.verbose, true, '\'verbose\' should have value');
+    assert.strictEqual(consoleOptions.debug, true, '\'debug\' should have value');
 
-        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default', verbose: true });
-        assert.equal(consoleOptions.verbose, true, `'verbose' should have value`);
-        assert.equal(consoleOptions.debug, false, `'debug' should have value`);
+    consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default', verbose: true });
+    assert.strictEqual(consoleOptions.verbose, true, '\'verbose\' should have value');
+    assert.strictEqual(consoleOptions.debug, false, '\'debug\' should have value');
 
-        consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default', debug: true });
-        assert.equal(consoleOptions.verbose, false, `'verbose' should have value`);
-        assert.equal(consoleOptions.debug, true, `'debug' should have value`);
+    consoleOptions = btools.ConsoleLogLevel.Validate({ logLevel: 'default', debug: true });
+    assert.strictEqual(consoleOptions.verbose, false, '\'verbose\' should have value');
+    assert.strictEqual(consoleOptions.debug, true, '\'debug\' should have value');
 
-        done();
-    });
+    done();
+  });
 
-    it('Line continuation should succeed', done => {
-        btools.ConsoleCaptureStart();
-        try {
-            console.info('Line to complete\b');
-            console.info('\bon next call.');
-            console.warn('Warning composed\b');
-            console.warn('\bby more than\b');
-            console.warn('\btwo calls.');
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+  it('Line continuation should succeed', done => {
+    btools.ConsoleCaptureStart();
+    try {
+      console.info('Line to complete\b');
+      console.info('\bon next call.');
+      console.warn('Warning composed\b');
+      console.warn('\bby more than\b');
+      console.warn('\btwo calls.');
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        assert.equal(btools.stdout.length, 5, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.strictEqual(btools.stdout.length, 5, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
 
-        done();
-    });
+    done();
+  });
 
-    btools.ConsoleSupportedPlatforms.forEach(platform => {
-        it(`should succeed for plaform '${platform}'`, function(done) {
-            btools.ConsoleCaptureStart();
-            try {
-                // @ts-ignore
-                btools.ConsoleInit(platform);
-                btools.ConsoleCaptureStop();
-            } catch(err) {
-                btools.ConsoleCaptureStop();
-                throw err;
-            }
+  btools.ConsoleSupportedPlatforms.forEach(platform => {
+    it(`should succeed for plaform '${platform}'`, function (done) {
+      btools.ConsoleCaptureStart();
+      try {
+        // @ts-ignore
+        btools.ConsoleInit(platform);
+        btools.ConsoleCaptureStop();
+      } catch (err) {
+        btools.ConsoleCaptureStop();
+        throw err;
+      }
 
-            btools.ConsoleCaptureStart();
-            try {
-                btools.ConsoleDefaultMethods.forEach(method => {
-                    console[method](`Testing '${method}' message.`);
-                });
-                btools.ConsoleCaptureStop();
-            } catch (err) {
-                btools.ConsoleCaptureStop();
-                throw err;
-            }
-    
-
-            assert.equal(btools.stdout.length, btools.DebugMode ? 3 : 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
-            assert.equal(btools.stderr.length, 1, `stderr should contain exact number of lines:${os.EOL}${btools.stderr.join('')}`);
-            btools.ConsoleDefaultMethods.forEach(method => {
-                var lines = [];
-                var checkMessage = `Testing '${method}' message.${os.EOL}`;
-                if (method == 'error') {
-                    btools.stderr.forEach(line => {
-                        // @ts-ignore
-                        lines.push(line.plain(method));
-                    });
-                    assert.ok(lines.includes(checkMessage), `stderr should include '${checkMessage}'`);
-                } else {
-                    btools.stdout.forEach(line => {
-                        // @ts-ignore
-                        lines.push(line.plain(method));
-                    });
-                    if (method == 'debug' && !btools.DebugMode) {
-                        assert.ok(!lines.includes(checkMessage), `stdout shouldn't include '${checkMessage}'`);
-                    } else {
-                        assert.ok(lines.includes(checkMessage), `stdout should include '${checkMessage}'`);
-                    }
-                }
-            });
-
-            done();
+      btools.ConsoleCaptureStart();
+      try {
+        btools.ConsoleDefaultMethods.forEach(method => {
+          console[method](`Testing '${method}' message.`);
         });
+        btools.ConsoleCaptureStop();
+      } catch (err) {
+        btools.ConsoleCaptureStop();
+        throw err;
+      }
+
+      assert.strictEqual(btools.stdout.length, btools.DebugMode ? 3 : 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+      assert.strictEqual(btools.stderr.length, 1, `stderr should contain exact number of lines:${os.EOL}${btools.stderr.join('')}`);
+      btools.ConsoleDefaultMethods.forEach(method => {
+        var lines = [];
+        var checkMessage = `Testing '${method}' message.${os.EOL}`;
+        if (method === 'error') {
+          btools.stderr.forEach(line => {
+            // @ts-ignore
+            lines.push(line.plain(method));
+          });
+          assert.ok(lines.includes(checkMessage), `stderr should include '${checkMessage}'`);
+        } else {
+          btools.stdout.forEach(line => {
+            // @ts-ignore
+            lines.push(line.plain(method));
+          });
+          if (method === 'debug' && !btools.DebugMode) {
+            assert.ok(!lines.includes(checkMessage), `stdout shouldn't include '${checkMessage}'`);
+          } else {
+            assert.ok(lines.includes(checkMessage), `stdout should include '${checkMessage}'`);
+          }
+        }
+      });
+
+      done();
     });
+  });
 });
 
 describe(`${thisPackage.name} vc-utils tests`, function () {
-    var vc = require('../lib/vc-utils');
+  var vc = require('../lib/vc-utils');
 
-    it('GetLastChange() should fail with faulty path specification', function(done) {
-        var result;
+  it('GetLastChange() should fail with faulty path specification', function (done) {
+    var result;
 
-        btools.ConsoleCaptureStart();
-        try {
-            result = vc.GetLastChange('');
-            assert.fail(`should have failed`);
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `'' is not a valid path specification for parameter 'pathSpec'.`, `Error message should be`)
-            assert.equal(result, undefined, `Variable 'result' should have exact value`);
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      result = vc.GetLastChange('');
+      assert.fail('should have failed');
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, '\'\' is not a valid path specification for parameter \'pathSpec\'.', 'Error message should be');
+      assert.strictEqual(result, undefined, 'Variable \'result\' should have exact value');
+    }
 
-        done();
+    done();
+  });
+
+  it('GetLastChange() should return NaN with unknown or untracked path specification', function (done) {
+    var result;
+
+    btools.ConsoleCaptureStart();
+    try {
+      result = vc.GetLastChange(path.resolve('fakefile'));
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
+
+    assert.strictEqual(btools.stdout.length, btools.DebugMode ? 4 : 0, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.ok(isNaN(result), 'Variable \'result\' should be NaN');
+
+    done();
+  });
+
+  it('GetLastChange() should succeed otherwise', function (done) {
+    var result;
+
+    btools.ConsoleCaptureStart();
+    try {
+      result = vc.GetLastChange(path.resolve('.'));
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
+
+    assert.strictEqual(btools.stdout.length, btools.DebugMode ? 4 : 0, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.ok(!isNaN(result), 'Variable \'result\' should not be NaN');
+    assert.strictEqual(typeof (result), 'number', 'Variable \'result\' should have exact type');
+    done();
+  });
+
+  it('SupportedVersionControlProviders() should return specific list', function (done) {
+    var result;
+    btools.ConsoleCaptureStart();
+    try {
+      result = vc.SupportedVersionControlProviders();
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
+
+    var expectedProviders = ['git', 'tfs'];
+    var exceptions = [];
+    try {
+      assert.strictEqual(result.length, expectedProviders.length, 'result array should have exact length');
+    } catch (err) {
+      exceptions.push(err);
+    }
+
+    expectedProviders.forEach(provider => {
+      try {
+        assert.ok(result.includes(provider), `result array should include '${provider}'`);
+      } catch (err) {
+        exceptions.push(err);
+      }
     });
 
-    it('GetLastChange() should return NaN with unknown or untracked path specification', function(done) {
-        var result;
-
-        btools.ConsoleCaptureStart();
-        try {
-            result = vc.GetLastChange(path.resolve('fakefile'));
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
-
-        assert.equal(btools.stdout.length, btools.DebugMode ? 4 : 0, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
-        assert.ok(isNaN(result), `Variable 'result' should be NaN`);
-
-        done();
+    result.forEach(provider => {
+      try {
+        assert.ok(expectedProviders.includes(provider), `result array should NOT include provider '${provider}'`);
+      } catch (err) {
+        exceptions.push(err);
+      }
     });
 
-    it('GetLastChange() should succeed otherwise', function(done) {
-        var result;
+    if (exceptions.length > 0) {
+      var msg = [];
+      exceptions.forEach(err => msg.push(err.message));
+      assert.fail(`Aggregate error, collected ${exceptions.length} errors total:${os.EOL}\t${msg.join(`${os.EOL}\t`)}`);
+    }
 
-        btools.ConsoleCaptureStart();
-        try {
-            result = vc.GetLastChange(path.resolve('.'));
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    done();
+  });
 
-        assert.equal(btools.stdout.length, btools.DebugMode ? 4 : 0, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
-        assert.ok(!isNaN(result), `Variable 'result' should not be NaN`);
-        assert.equal(typeof(result), 'number', `Variable 'result' should have exact type`);
-        done();
-    });
+  it('GetVersionControlProvider() should return [undefined] if no VC provider was found', function (done) {
+    var result;
+    btools.ConsoleCaptureStart();
+    try {
+      result = vc.GetVersionControlProvider('../');
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-    it(`SupportedVersionControlProviders() should return specific list`, function(done) {
-        var result;
-        btools.ConsoleCaptureStart();
-        try {
-            result = vc.SupportedVersionControlProviders();
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    assert.strictEqual(`${result}`, 'undefined', 'result should be');
 
-        var expectedProviders = ['git', 'tfs'];
-        var exceptions = [];
-        try {
-            assert.equal(result.length, expectedProviders.length, `result array should have exact length`);
-        } catch(err) {
-            exceptions.push(err);
-        }
+    done();
+  });
 
-        expectedProviders.forEach(provider => {
-            try {
-                assert.ok(result.includes(provider), `result array should include '${provider}'`);
-            } catch(err) {
-                exceptions.push(err);
-            }
-        });
+  it('GetVersionControlProvider() should succeed', function (done) {
+    var result;
+    btools.ConsoleCaptureStart();
+    try {
+      result = vc.GetVersionControlProvider();
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        result.forEach(provider => {
-            try {
-                assert.ok(expectedProviders.includes(provider), `result array should NOT include provider '${provider}'`);
-            } catch(err) {
-                exceptions.push(err);
-            }
-        });
+    assert.strictEqual(`${result}`, 'git', 'result should be');
 
-        if (exceptions.length > 0) {
-            var msg = [];
-            exceptions.forEach(err => msg.push(err.message));
-            assert.fail(`Aggregate error, collected ${exceptions.length} errors total:${os.EOL}\t${msg.join(`${os.EOL}\t`)}`);
-        }
-
-        done();
-    });
-
-    it(`GetVersionControlProvider() should return [undefined] if no VC provider was found`, function(done) {
-        var result;
-        btools.ConsoleCaptureStart();
-        try {
-            result = vc.GetVersionControlProvider('../');
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
-
-        assert.equal(`${result}`, 'undefined', `result should be`);
-
-        done();
-    });
-
-    it(`GetVersionControlProvider() should succeed`, function(done) {
-        var result;
-        btools.ConsoleCaptureStart();
-        try {
-            //result = vc.GetVersionControlProvider('C:\\Users\\thorbenw\\Documents\\Visual Studio 2015\\Projects\\oms2nav-twk');
-            result = vc.GetVersionControlProvider();
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
-
-        assert.equal(`${result}`, 'git', `result should be`);
-
-        done();
-    });
+    done();
+  });
 });
 
 describe(`${thisPackage.name} declaration-files tests`, function () {
-    var deffiles = require('../lib/declaration-files');
+  var deffiles = require('../lib/declaration-files');
 
-    it('RemoveDeclarations() should succeed', function(done) {
-        var result = 0;
-        var expectedSubfolders = 3; // current status, may change
+  it('RemoveDeclarations() should succeed', function (done) {
+    var result = 0;
+    var expectedSubfolders = 3; // current status, may change
 
-        btools.ConsoleCaptureStart();
-        try {
-            result = deffiles.RemoveDeclarations(undefined, { dryRun: true, consoleOptions: { logLevel: 'debug' } });
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      result = deffiles.RemoveDeclarations(undefined, { dryRun: true, consoleOptions: { logLevel: 'debug' } });
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
-        // @ts-ignore
-        assert.equal(btools.stdout[0].plain('info'), `Removing declaration files (*.d.ts) from path '${path.resolve('.')}' and ${expectedSubfolders} subfolders.${os.EOL}`, `stdout first  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Removed ${result} declaration files (*.d.ts) from path '${path.resolve('.')}'.${os.EOL}`, `stdout second line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
-        
-        done();
-    });
+    assert.ok(btools.stdout.length > 0, 'stdout should contain lines');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[0].plain('info'), `Removing declaration files (*.d.ts) from path '${path.resolve('.')}' and ${expectedSubfolders} subfolders.${os.EOL}`, 'stdout first  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[btools.stdout.length - 1].plain('info'), `Removed ${result} declaration files (*.d.ts) from path '${path.resolve('.')}'.${os.EOL}`, 'stdout second line should contain');
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+
+    done();
+  });
 });
 
 describe(`${thisPackage.name} AsciiDoc tests`, function () {
-    var genadoc = require('../lib/generate-adoc');
+  var genadoc = require('../lib/generate-adoc');
 
-    it('ResolveIncludes() should fail without proper root source path for include files', function(done) {
-        var result;
+  it('ResolveIncludes() should fail without proper root source path for include files', function (done) {
+    var result;
 
-        btools.ConsoleCaptureStart();
-        try {
-            // @ts-ignore
-            result = genadoc.ResolveIncludes();
-            assert.fail(`should have failed`);
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `The root source path for include files 'undefined' is not a directory.`, `Error message should be`)
-            assert.equal(result, undefined, `Variable 'result' should have exact value`);
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      // @ts-ignore
+      result = genadoc.ResolveIncludes();
+      assert.fail('should have failed');
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, 'The root source path for include files \'undefined\' is not a directory.', 'Error message should be');
+      assert.strictEqual(result, undefined, 'Variable \'result\' should have exact value');
+    }
 
-        done();
-    });
+    done();
+  });
 
-    it('ResolveIncludes() should succeed', function(done) {
-        var fakeRoot = '.';
-        var fakePath = 'fakePath';
+  it('ResolveIncludes() should succeed', function (done) {
+    var fakeRoot = '.';
+    var fakePath = 'fakePath';
 
-        btools.ConsoleCaptureStart();
-        try {
-            genadoc.ResolveIncludes(fakeRoot, `include::${fakePath}[]include::${fakePath}[]`);
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      genadoc.ResolveIncludes(fakeRoot, `include::${fakePath}[]include::${fakePath}[]`);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines:${os.EOL}${btools.stdout.join('')}`);
-        assert.equal(btools.stderr.length, 2, `stderr should contain exact number of lines:${os.EOL}${btools.stderr.join('')}`);
-        // @ts-ignore
-        assert.equal(btools.stderr[0].plain('error'), `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.${os.EOL}`, `stderr first  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stderr[1].plain('error'), `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.${os.EOL}`, `stderr second line should contain`);
+    assert.strictEqual(btools.stdout.length, 0, `stdout shouldn't contain any lines:${os.EOL}${btools.stdout.join('')}`);
+    assert.strictEqual(btools.stderr.length, 2, `stderr should contain exact number of lines:${os.EOL}${btools.stderr.join('')}`);
+    // @ts-ignore
+    assert.strictEqual(btools.stderr[0].plain('error'), `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.${os.EOL}`, 'stderr first  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stderr[1].plain('error'), `Include file '${path.resolve(fakeRoot, fakePath)}' could not be found.${os.EOL}`, 'stderr second line should contain');
 
-        done();
-    });
+    done();
+  });
 
-    it('GetAttribute() should fail without attributeName specification', function(done) {
-        var result;
+  it('GetAttribute() should fail without attributeName specification', function (done) {
+    var result;
 
-        btools.ConsoleCaptureStart();
-        try {
-            // @ts-ignore
-            result = genadoc.GetAttribute();
-            assert.fail(`should have failed`);
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `The 'attributeName' parameter is not a string.`, `Error message should be`)
-            assert.equal(result, undefined, `Variable 'result' should have exact value`);
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      // @ts-ignore
+      result = genadoc.GetAttribute();
+      assert.fail('should have failed');
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, 'The \'attributeName\' parameter is not a string.', 'Error message should be');
+      assert.strictEqual(result, undefined, 'Variable \'result\' should have exact value');
+    }
 
-        done();
-    });
+    done();
+  });
 
-    it('GetAttribute() should fail with duplicate attribute definitions', function(done) {
-        var result;
-        var attributeName = 'attributeName';
-        var inputLines = [ `:${attributeName}: `, `:${attributeName}: ` ];
+  it('GetAttribute() should fail with duplicate attribute definitions', function (done) {
+    var result;
+    var attributeName = 'attributeName';
+    var inputLines = [`:${attributeName}: `, `:${attributeName}: `];
 
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetAttribute(attributeName, ...inputLines);
-            assert.fail(`should have failed`);
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `Attribute '${attributeName}' has been defined multiple times.`, `Error message should be`)
-            assert.equal(result, undefined, `Variable 'result' should have exact value`);
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      result = genadoc.GetAttribute(attributeName, ...inputLines);
+      assert.fail('should have failed');
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, `Attribute '${attributeName}' has been defined multiple times.`, 'Error message should be');
+      assert.strictEqual(result, undefined, 'Variable \'result\' should have exact value');
+    }
 
-        done();
-    });
+    done();
+  });
 
-    it('GetAttribute() should succeed otherwise', function(done) {
-        var result;
-        var attributeName = 'attributeName';
-        var inputLines = [];
+  it('GetAttribute() should succeed otherwise', function (done) {
+    var result;
+    var attributeName = 'attributeName';
+    var inputLines = [];
 
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetAttribute('');
-            result = genadoc.GetAttribute('', ...inputLines);
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      result = genadoc.GetAttribute('');
+      result = genadoc.GetAttribute('', ...inputLines);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines:${os.EOL}${btools.stdout.join('')}`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
-        assert.equal(result, undefined, `Variable 'result' should have exact value`);
+    assert.strictEqual(btools.stdout.length, 0, `stdout shouldn't contain any lines:${os.EOL}${btools.stdout.join('')}`);
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.strictEqual(result, undefined, 'Variable \'result\' should have exact value');
 
+    btools.ConsoleCaptureStart();
+    try {
+      result = genadoc.GetAttribute(attributeName, ...inputLines);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetAttribute(attributeName, ...inputLines);
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    assert.strictEqual(btools.stdout.length, 0, 'stdout shouldn\'t contain any lines');
+    assert.strictEqual(btools.stderr.length, 0, 'stderr shouldn\'t contain any lines');
+    assert.strictEqual(result, undefined, 'Variable \'result\' should have exact value');
 
-        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
-        assert.equal(result, undefined, `Variable 'result' should have exact value`);
+    inputLines = [`:${attributeName}:`];
+    btools.ConsoleCaptureStart();
+    try {
+      result = genadoc.GetAttribute(attributeName, ...inputLines);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
+    assert.strictEqual(btools.stdout.length, 0, 'stdout shouldn\'t contain any lines');
+    assert.strictEqual(btools.stderr.length, 0, 'stderr shouldn\'t contain any lines');
+    assert.strictEqual(result, undefined, 'Variable \'result\' should have exact value');
 
-        inputLines = [ `:${attributeName}:` ];
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetAttribute(attributeName, ...inputLines);
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    inputLines = [`:${attributeName}: `];
+    btools.ConsoleCaptureStart();
+    try {
+      result = genadoc.GetAttribute(attributeName, ...inputLines);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
-        assert.equal(result, undefined, `Variable 'result' should have exact value`);
+    assert.strictEqual(btools.stdout.length, 0, 'stdout shouldn\'t contain any lines');
+    assert.strictEqual(btools.stderr.length, 0, 'stderr shouldn\'t contain any lines');
+    assert.strictEqual(result, '', 'Variable \'result\' should have exact value');
 
-        
-        inputLines = [ `:${attributeName}: ` ];
-        btools.ConsoleCaptureStart();
-        try {
-            result = genadoc.GetAttribute(attributeName, ...inputLines);
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    done();
+  });
 
-        assert.equal(btools.stdout.length, 0, `stdout shouldn't contain any lines`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines`);
-        assert.equal(result, '', `Variable 'result' should have exact value`);
+  it('GenerateReadme() should succeed', function (done) {
+    var packagePath = path.resolve('.');
+    var readmeFileName = 'README.adoc';
 
-        done();
-    });
+    var readmeContent = '';
+    var readmeFile = path.join(packagePath, readmeFileName);
+    if (fs.existsSync(readmeFile)) {
+      readmeContent = fs.readFileSync(readmeFile, { encoding: 'utf8' });
+    }
 
-    it('GenerateReadme() should succeed', function(done) {
-        var packagePath = path.resolve('.');
-        var readmeFileName = 'README.adoc';
+    btools.ConsoleCaptureStart();
+    try {
+      genadoc.GenerateReadme(packagePath, readmeFileName, { updateTimestamp: true });
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    } finally {
+      if (readmeContent) {
+        fs.writeFileSync(readmeFile, readmeContent, { encoding: 'utf8' });
+      }
+    }
 
-        var readmeContent = '';
-        var readmeFile = path.join(packagePath, readmeFileName);
-        if (fs.existsSync(readmeFile)) {
-            readmeContent = fs.readFileSync(readmeFile, { encoding: 'utf8' });
-        }
+    assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
+    assert.strictEqual(btools.stdout.length, btools.DebugMode ? 7 : 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[0].plain('info'), `Creating/Updating file '${readmeFileName}'.${os.EOL}`, 'stdout first  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[btools.stdout.length - 1].plain('info'), `Successfully updated readme file '${readmeFile}'.${os.EOL}`, 'stdout second line should contain');
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
 
-        btools.ConsoleCaptureStart();
-        try {
-            genadoc.GenerateReadme(packagePath, readmeFileName, { updateTimestamp: true });
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        } finally {
-            if (readmeContent) {
-                fs.writeFileSync(readmeFile, readmeContent, { encoding: 'utf8' });
-            }
-        }
-
-        assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
-        assert.equal(btools.stdout.length, btools.DebugMode ? 7 : 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
-        // @ts-ignore
-        assert.equal(btools.stdout[0].plain('info'), `Creating/Updating file '${readmeFileName}'.${os.EOL}`, `stdout first  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Successfully updated readme file '${readmeFile}'.${os.EOL}`, `stdout second line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
-
-        done();
-    });
+    done();
+  });
 });
 
 describe(`${thisPackage.name} PostPack() tests`, function () {
-    it('should succeed', function(done) {
+  it('should succeed', function (done) {
+    var npmTarballEnv = 'NPM_TARBALL';
+    if (process.env[npmTarballEnv] !== undefined) {
+      delete process.env[npmTarballEnv];
+    }
+    assert.ok(process.env[npmTarballEnv] === undefined);
 
-        var npmTarballEnv = 'NPM_TARBALL';
-        if (process.env[npmTarballEnv] != undefined) {
-            delete process.env[npmTarballEnv];
-        }
-        assert.ok(process.env[npmTarballEnv] == undefined);
+    var npmTarballFile = path.resolve('.', npmTarballEnv);
+    if (fs.existsSync(npmTarballFile)) {
+      fs.removeSync(npmTarballFile);
+    }
+    assert.ok(!fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should not exist`);
 
-        var npmTarballFile = path.resolve('.', npmTarballEnv);
-        if (fs.existsSync(npmTarballFile)) {
-            fs.removeSync(npmTarballFile);
-        }
-        assert.ok(!fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should not exist`);
+    btools.ConsoleCaptureStart();
+    try {
+      btools.PostPack([['./lib/clean-package-elements', 'scripts.test']], { logLevel: 'verbose', debug: btools.DebugMode });
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        btools.ConsoleCaptureStart();
-        try {
-            btools.PostPack([ [ './lib/clean-package-elements', 'scripts.test' ] ], { logLevel: 'verbose', debug: btools.DebugMode });
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    assert.ok(btools.stdout.length > 0, 'stdout should contain lines');
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.ok((process.env[npmTarballEnv] !== undefined), `Environment variable '${npmTarballEnv}' should exist`);
+    assert.ok(fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should exist`);
+    assert.strictEqual(fs.readFileSync(npmTarballFile, { encoding: 'utf8' }), process.env[npmTarballEnv], `Environment variable '${npmTarballEnv}' value should equal content of file '${npmTarballFile}'`);
 
-        assert.ok(btools.stdout.length > 0, `stdout should contain lines`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
-        assert.ok((process.env[npmTarballEnv] != undefined), `Environment variable '${npmTarballEnv}' should exist`);
-        assert.ok(fs.existsSync(npmTarballFile), `File '${npmTarballFile}' should exist`);
-        assert.equal(fs.readFileSync(npmTarballFile, { encoding: 'utf8' }), process.env[npmTarballEnv], `Environment variable '${npmTarballEnv}' value should equal content of file '${npmTarballFile}'`);
+    delete process.env[npmTarballEnv];
+    fs.removeSync(npmTarballFile);
 
-        delete process.env[npmTarballEnv];
-        fs.removeSync(npmTarballFile);
-
-        done();
-    });
+    done();
+  });
 });
 
 describe(`${thisPackage.name} CleanPackage() tests`, function () {
-    it('should succeed with temporary package file', function(done) {
-        var cleanpackage = require('../lib/clean-package-elements');
-        var tempPackageFile = path.resolve(`./test/package.json`);
-        var tempElements = [ 'scripts.test', 'scripts.prepublish' ];
+  it('should succeed with temporary package file', function (done) {
+    var cleanpackage = require('../lib/clean-package-elements');
+    var tempPackageFile = path.resolve('./test/package.json');
+    var tempElements = ['scripts.test', 'scripts.prepublish'];
 
-        fs.writeJSONSync(tempPackageFile, thisPackage, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
-        btools.ConsoleCaptureStart();
-        try {
-            cleanpackage.CleanPackageElements(`./test`, ...tempElements);
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        } finally {
-            fs.removeSync(tempPackageFile);
-        }
+    fs.writeJSONSync(tempPackageFile, thisPackage, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
+    btools.ConsoleCaptureStart();
+    try {
+      cleanpackage.CleanPackageElements('./test', ...tempElements);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    } finally {
+      fs.removeSync(tempPackageFile);
+    }
 
-        assert.equal(btools.stdout.length, 4, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
-        // @ts-ignore
-        assert.equal(btools.stdout[0].plain('info'), `Cleaning up package file '${tempPackageFile}'.${os.EOL}`, `stdout first  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[1].plain('info'), `Removing element '${tempElements[0]}'.${os.EOL}`, `stdout second line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[2].plain('info'), `Element '${tempElements[1]}' doesn't exist.${os.EOL}`, `stdout third  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[3].plain('info'), `Successfully cleaned up '${tempPackageFile}'.${os.EOL}`, `stdout fourth line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.strictEqual(btools.stdout.length, 4, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[0].plain('info'), `Cleaning up package file '${tempPackageFile}'.${os.EOL}`, 'stdout first  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[1].plain('info'), `Removing element '${tempElements[0]}'.${os.EOL}`, 'stdout second line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[2].plain('info'), `Element '${tempElements[1]}' doesn't exist.${os.EOL}`, 'stdout third  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[3].plain('info'), `Successfully cleaned up '${tempPackageFile}'.${os.EOL}`, 'stdout fourth line should contain');
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
 
-        done();
-    });
+    done();
+  });
 });
 
 describe(`${thisPackage.name} CreateFallbackReadme() tests`, function () {
-    it('should succeed', function(done) {
-        var crtfbreadme = require('../lib/create-fallback-readme');
-        var tempReadmeFile = path.resolve(`./test/README.md`);
-        if (fs.existsSync(tempReadmeFile)) {
-            fs.removeSync(tempReadmeFile);
-        }
+  it('should succeed', function (done) {
+    var crtfbreadme = require('../lib/create-fallback-readme');
+    var tempReadmeFile = path.resolve('./test/README.md');
+    if (fs.existsSync(tempReadmeFile)) {
+      fs.removeSync(tempReadmeFile);
+    }
 
-        btools.ConsoleCaptureStart();
-        try {
-            crtfbreadme.CreateFallbackReadme(`./test`);
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            if (fs.existsSync(tempReadmeFile)) {
-                fs.removeSync(tempReadmeFile);
-            }
-            throw err;
-        }
-
-        assert.ok(fs.existsSync(tempReadmeFile), `File ${tempReadmeFile} should exist`);
+    btools.ConsoleCaptureStart();
+    try {
+      crtfbreadme.CreateFallbackReadme('./test');
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      if (fs.existsSync(tempReadmeFile)) {
         fs.removeSync(tempReadmeFile);
-        assert.ok(!fs.existsSync(tempReadmeFile), `File ${tempReadmeFile} should have been deleted`);
+      }
+      throw err;
+    }
 
-        assert.equal(btools.stdout.length, 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
-        // @ts-ignore
-        assert.equal(btools.stdout[0].plain('info'), `Creating readme file '${tempReadmeFile}'.${os.EOL}`, `stdout first  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[1].plain('info'), `Successfully created '${tempReadmeFile}'.${os.EOL}`, `stdout second line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.ok(fs.existsSync(tempReadmeFile), `File ${tempReadmeFile} should exist`);
+    fs.removeSync(tempReadmeFile);
+    assert.ok(!fs.existsSync(tempReadmeFile), `File ${tempReadmeFile} should have been deleted`);
 
-        done();
-    });
+    assert.strictEqual(btools.stdout.length, 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[0].plain('info'), `Creating readme file '${tempReadmeFile}'.${os.EOL}`, 'stdout first  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[1].plain('info'), `Successfully created '${tempReadmeFile}'.${os.EOL}`, 'stdout second line should contain');
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+
+    done();
+  });
 });
 
 describe(`${thisPackage.name} CheckGlobalDeps() tests`, function () {
-    it('should succeed with simple as well as spread syntax', function(done) {
-        var checkglobaldeps = require('../lib/check-global-deps');
+  it('should succeed with simple as well as spread syntax', function (done) {
+    var checkglobaldeps = require('../lib/check-global-deps');
 
-        btools.ConsoleCaptureStart();
-        try {
-            checkglobaldeps.CheckGlobalDeps('npm', 'npm');
-            checkglobaldeps.CheckGlobalDeps('fakePackage');
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      checkglobaldeps.CheckGlobalDeps('npm', 'npm');
+      checkglobaldeps.CheckGlobalDeps('fakePackage');
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        done();
-    });
+    done();
+  });
 });
 
 describe(`${thisPackage.name} UpdatePackageVersion() tests`, function () {
-    var updatepackage = require('../lib/update-package-version');
+  var updatepackage = require('../lib/update-package-version');
 
-    it('should fail with invalid file spec', function(done) {
-        btools.ConsoleCaptureStart();
-        try {
-            // @ts-ignore
-            updatepackage.UpdatePackageVersion();
-            assert.fail('should have failed');
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `Parameter 'packagePath' is mandatory.`, `Error message should be`)
-        }
+  it('should fail with invalid file spec', function (done) {
+    btools.ConsoleCaptureStart();
+    try {
+      // @ts-ignore
+      updatepackage.UpdatePackageVersion();
+      assert.fail('should have failed');
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, 'Parameter \'packagePath\' is mandatory.', 'Error message should be');
+    }
 
-        done();
-    });
+    done();
+  });
 
-    it('should fail with invalid release type', function(done) {
-        btools.ConsoleCaptureStart();
-        try {
-            // @ts-ignore
-            updatepackage.UpdatePackageVersion('fakePath');
-            assert.fail('should have failed');
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `Parameter 'releaseType' is mandatory.`, `Error message should be`)
-        }
+  it('should fail with invalid release type', function (done) {
+    btools.ConsoleCaptureStart();
+    try {
+      // @ts-ignore
+      updatepackage.UpdatePackageVersion('fakePath');
+      assert.fail('should have failed');
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, 'Parameter \'releaseType\' is mandatory.', 'Error message should be');
+    }
 
-        done();
-    });
+    done();
+  });
 
-    it('should succeed with temporary package file', function(done) {
-        var tempPackageFile = path.resolve(`./test/package.json`);
-        var tempReleaseType = updatepackage.ReleaseType('patch');
+  it('should succeed with temporary package file', function (done) {
+    var tempPackageFile = path.resolve('./test/package.json');
+    var tempReleaseType = updatepackage.ReleaseType('patch');
 
-        fs.writeJSONSync(tempPackageFile, thisPackage, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
-        btools.ConsoleCaptureStart();
-        try {
-            updatepackage.UpdatePackageVersion(`./test`, tempReleaseType);
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        } finally {
-            fs.removeSync(tempPackageFile);
-        }
+    fs.writeJSONSync(tempPackageFile, thisPackage, { encoding: 'utf8', spaces: 4, EOL: os.EOL });
+    btools.ConsoleCaptureStart();
+    try {
+      updatepackage.UpdatePackageVersion('./test', tempReleaseType);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    } finally {
+      fs.removeSync(tempPackageFile);
+    }
 
-        assert.equal(btools.stdout.length, 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
-        // @ts-ignore
-        assert.equal(btools.stdout[0].plain('info'), `Updating version of package file '${tempPackageFile}'.${os.EOL}`, `stdout first  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[1].plain('info'), `Successfully updated ${tempReleaseType} of version from [${thisPackage['version']}] to [${require('semver').inc(thisPackage['version'], tempReleaseType)}] in '${tempPackageFile}'.${os.EOL}`, `stdout second line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.strictEqual(btools.stdout.length, 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[0].plain('info'), `Updating version of package file '${tempPackageFile}'.${os.EOL}`, 'stdout first  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[1].plain('info'), `Successfully updated ${tempReleaseType} of version from [${thisPackage.version}] to [${require('semver').inc(thisPackage.version, tempReleaseType)}] in '${tempPackageFile}'.${os.EOL}`, 'stdout second line should contain');
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
 
-        done();
-    });
+    done();
+  });
 });
 
 describe(`${thisPackage.name} TfxIgnore() tests`, function () {
-    const tfxutils = require('../lib/tfx-utils');
+  const tfxutils = require('../lib/tfx-utils');
 
-    it('should fail', (done) => {
-        btools.ConsoleCaptureStart();
-        try {
-            tfxutils.TfxIgnore();
-            assert.fail('should have failed');
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `VSIX package file '${path.resolve('../vss-extension.json')}' could not be found.`, `Error message should be`)
-        }
+  it('should fail', (done) => {
+    btools.ConsoleCaptureStart();
+    try {
+      tfxutils.TfxIgnore();
+      assert.fail('should have failed');
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, `VSIX package file '${path.resolve('../vss-extension.json')}' could not be found.`, 'Error message should be');
+    }
 
-        done();
-    });
+    done();
+  });
 
-    it('should succeed', (done) => {
-        var vsixFileIn = './test/vss-extension.json';
-        var vsixFileOut = './test/vss-extension.resolved.json';
+  it('should succeed', (done) => {
+    var vsixFileIn = './test/vss-extension.json';
+    var vsixFileOut = './test/vss-extension.resolved.json';
 
-        if (fs.existsSync(vsixFileIn)) {
-            fs.removeSync(vsixFileIn);
-        }
-        var vsixJson = { files: [ { path: '.' } ]}
-        fs.writeJSONSync(vsixFileIn, vsixJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+    if (fs.existsSync(vsixFileIn)) {
+      fs.removeSync(vsixFileIn);
+    }
+    var vsixJson = { files: [{ path: '.' }] };
+    fs.writeJSONSync(vsixFileIn, vsixJson, { spaces: 4, encoding: 'utf8', EOL: os.EOL });
 
-        btools.ConsoleCaptureStart();
-        try {
-            tfxutils.TfxIgnore(vsixFileIn, undefined, { logLevel: 'debug' });
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    btools.ConsoleCaptureStart();
+    try {
+      tfxutils.TfxIgnore(vsixFileIn, undefined, { logLevel: 'debug' });
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        assert.ok(fs.existsSync(vsixFileOut), `File '${vsixFileOut}' should exist`);
-        fs.removeSync(vsixFileOut);
-        assert.ok(fs.existsSync(vsixFileIn), `File '${vsixFileIn}' should (still) exist`);
-        fs.removeSync(vsixFileIn);
+    assert.ok(fs.existsSync(vsixFileOut), `File '${vsixFileOut}' should exist`);
+    fs.removeSync(vsixFileOut);
+    assert.ok(fs.existsSync(vsixFileIn), `File '${vsixFileIn}' should (still) exist`);
+    fs.removeSync(vsixFileIn);
 
-        assert.ok(btools.stdout.length >= 2, `stdout should contain two or more lines:${os.EOL}${btools.stdout.join('')}`);
-        // @ts-ignore
-        assert.equal(btools.stdout[0].plain('info'), `Processing VSIX package file '${path.resolve(vsixFileIn)}'.${os.EOL}`, `stdout first  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Successfully updated VSIX package file '${path.resolve(vsixFileOut)}'.${os.EOL}`, `stdout second line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
+    assert.ok(btools.stdout.length >= 2, `stdout should contain two or more lines:${os.EOL}${btools.stdout.join('')}`);
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[0].plain('info'), `Processing VSIX package file '${path.resolve(vsixFileIn)}'.${os.EOL}`, 'stdout first  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[btools.stdout.length - 1].plain('info'), `Successfully updated VSIX package file '${path.resolve(vsixFileOut)}'.${os.EOL}`, 'stdout second line should contain');
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
 
-        done();
-    });
+    done();
+  });
 });
 
 describe(`${thisPackage.name} TfxMkboot() tests`, function () {
-    const tfxutils = require('../lib/tfx-utils');
+  const tfxutils = require('../lib/tfx-utils');
 
-    it('should fail', (done) => {
-        btools.ConsoleCaptureStart();
-        try {
-            tfxutils.TfxMkboot2();
-            assert.fail('should have failed');
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `Task file '${path.resolve('./task.json')}' could not be found.`, `Error message should be`)
+  it('should fail', (done) => {
+    btools.ConsoleCaptureStart();
+    try {
+      tfxutils.TfxMkboot2();
+      assert.fail('should have failed');
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, `Task file '${path.resolve('./task.json')}' could not be found.`, 'Error message should be');
+    }
+
+    done();
+  });
+
+  it('should succeed', (done) => {
+    var tempPath = fs.mkdtempSync(path.join(os.tmpdir(), '_temp_npmbuildtools-'));
+    var extensionJsonFile = path.resolve(tempPath, 'vss-extension.json');
+    var packagePath = path.resolve(tempPath, 'test'); fs.ensureDirSync(packagePath);
+    var packageJsonFile = path.resolve(packagePath, 'package.json');
+    var taskJsonFile = path.resolve(packagePath, 'task.json');
+    var bootFile = path.resolve(packagePath, 'boot.js');
+
+    var tempPackageName = 'Test Package';
+
+    var extensionJson = {
+      publisher: 'testpublisher',
+      id: 'test-extension-id',
+      version: '0.0.1'
+    };
+    fs.writeJSONSync(extensionJsonFile, extensionJson, { spaces: 4, encoding: 'utf8', EOL: os.EOL });
+
+    var PckgJson = {
+      main: 'index.js',
+      version: '4.5.6'
+    };
+    fs.writeJSONSync(packageJsonFile, PckgJson, { spaces: 4, encoding: 'utf8', EOL: os.EOL });
+
+    var taskJson = {
+      id: 'Test-Package-Id',
+      name: tempPackageName,
+      version: {
+        Major: 1,
+        Minor: 2,
+        Patch: 3
+      },
+      execution: {
+        Node10: {
+          target: 0
         }
+      }
+    };
+    fs.writeJSONSync(taskJsonFile, taskJson, { spaces: 4, encoding: 'utf8', EOL: os.EOL });
 
-        done();
-    });
+    btools.ConsoleCaptureStart();
+    try {
+      tfxutils.TfxMkboot2({ packagePath: packagePath, incrementReleaseType: 'minor', consoleOptions: { logLevel: 'debug' } }, 'command1', 'command2');
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-    it('should succeed', (done) => {
-        var tempPath = fs.mkdtempSync(path.join(os.tmpdir(), '_temp_npmbuildtools-'));
-        var extensionJsonFile = path.resolve(tempPath, 'vss-extension.json');
-        var packagePath = path.resolve(tempPath, 'test'); fs.ensureDirSync(packagePath);
-        var packageJsonFile = path.resolve(packagePath, 'package.json');
-        var taskJsonFile = path.resolve(packagePath, 'task.json');
-        var bootFile = path.resolve(packagePath, 'boot.js');
+    assert.ok(fs.existsSync(bootFile), `File '${bootFile}' should exist`);
+    assert.ok(fs.existsSync(extensionJsonFile), `File '${extensionJsonFile}' should (still) exist`);
+    assert.ok(fs.existsSync(packageJsonFile), `File '${packageJsonFile}' should (still) exist`);
+    assert.ok(fs.existsSync(taskJsonFile), `File '${taskJsonFile}' should (still) exist`);
 
-        var tempPackageName = 'Test Package';
+    PckgJson.version = semver.inc(PckgJson.version, 'patch');
+    fs.writeJSONSync(packageJsonFile, PckgJson, { spaces: 4, encoding: 'utf8', EOL: os.EOL });
 
-        var extensionJson = {
-            publisher: "testpublisher",
-            id: "test-extension-id",
-            version: "0.0.1",
-        }
-        fs.writeJSONSync(extensionJsonFile, extensionJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+    btools.ConsoleCaptureStart();
+    try {
+      tfxutils.TfxMkboot2({ packagePath: packagePath, incrementReleaseType: 'minor', consoleOptions: { logLevel: 'debug' } }, 'command1', 'command2');
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        var PckgJson = {
-            main: 'index.js',
-            version: '4.5.6',
-        }
-        fs.writeJSONSync(packageJsonFile, PckgJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+    assert.ok(fs.existsSync(bootFile), `File '${bootFile}' should (still) exist`);
+    assert.ok(fs.existsSync(extensionJsonFile), `File '${extensionJsonFile}' should (still) exist`);
+    assert.ok(fs.existsSync(packageJsonFile), `File '${packageJsonFile}' should (still) exist`);
+    assert.ok(fs.existsSync(taskJsonFile), `File '${taskJsonFile}' should (still) exist`);
+    fs.removeSync(tempPath);
 
-        var taskJson = {
-            id: 'Test-Package-Id',
-            name: tempPackageName,
-            version: {
-                Major: 1,
-                Minor: 2,
-                Patch: 3,
-            },
-            execution: {
-                Node10: {
-                    target: 0
-                }
-            }
-        }
-        fs.writeJSONSync(taskJsonFile, taskJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
+    assert.ok(btools.stdout.length >= 2, `stdout should contain two or more lines:${os.EOL}${btools.stdout.join('')}`);
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[0].plain('info'), `Processing package in '${packagePath}'.${os.EOL}`, 'stdout first  line should contain');
+    // @ts-ignore
+    assert.strictEqual(btools.stdout[btools.stdout.length - 1].plain('info'), `Finished processing package '${tempPackageName}' in '${packagePath}'.${os.EOL}`, 'stdout second line should contain');
+    assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
 
-        btools.ConsoleCaptureStart();
-        try {
-            tfxutils.TfxMkboot2({ packagePath: packagePath, incrementReleaseType: 'minor', consoleOptions: { logLevel: 'debug' } }, 'command1', 'command2');
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
-
-        assert.ok(fs.existsSync(bootFile), `File '${bootFile}' should exist`);
-        assert.ok(fs.existsSync(extensionJsonFile), `File '${extensionJsonFile}' should (still) exist`);
-        assert.ok(fs.existsSync(packageJsonFile), `File '${packageJsonFile}' should (still) exist`);
-        assert.ok(fs.existsSync(taskJsonFile), `File '${taskJsonFile}' should (still) exist`);
-
-        PckgJson.version = semver.inc(PckgJson.version, 'patch');
-        fs.writeJSONSync(packageJsonFile, PckgJson, { spaces:4, encoding: 'utf8', EOL: os.EOL });
-
-        btools.ConsoleCaptureStart();
-        try {
-            tfxutils.TfxMkboot2({ packagePath: packagePath, incrementReleaseType: 'minor', consoleOptions: { logLevel: 'debug' } }, 'command1', 'command2');
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
-
-        assert.ok(fs.existsSync(bootFile), `File '${bootFile}' should (still) exist`);
-        assert.ok(fs.existsSync(extensionJsonFile), `File '${extensionJsonFile}' should (still) exist`);
-        assert.ok(fs.existsSync(packageJsonFile), `File '${packageJsonFile}' should (still) exist`);
-        assert.ok(fs.existsSync(taskJsonFile), `File '${taskJsonFile}' should (still) exist`);
-        fs.removeSync(tempPath);
-
-        assert.ok(btools.stdout.length >= 2, `stdout should contain two or more lines:${os.EOL}${btools.stdout.join('')}`);
-        // @ts-ignore
-        assert.equal(btools.stdout[0].plain('info'), `Processing package in '${packagePath}'.${os.EOL}`, `stdout first  line should contain`);
-        // @ts-ignore
-        assert.equal(btools.stdout[btools.stdout.length - 1].plain('info'), `Finished processing package '${tempPackageName}' in '${packagePath}'.${os.EOL}`, `stdout second line should contain`);
-        assert.equal(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
-
-        done();
-    });
+    done();
+  });
 });
 
-describe(`${thisPackage.name} Readme should be up to date`, function() {
-    it('CheckReadme() should succeed', function(done) {
-        var packagePath = path.resolve('.');
-        var readmeFileName = 'README.adoc';
+describe(`${thisPackage.name} Readme should be up to date`, function () {
+  it('CheckReadme() should succeed', function (done) {
+    var packagePath = path.resolve('.');
+    var readmeFileName = 'README.adoc';
 
-        var result;
-        btools.ConsoleCaptureStart();
-        try {
-            result = btools.CheckReadme(packagePath, readmeFileName, { updateTimestamp: true });
-            btools.ConsoleCaptureStop();
-        } catch(err) {
-            btools.ConsoleCaptureStop();
-            throw err;
-        }
+    var result;
+    btools.ConsoleCaptureStart();
+    try {
+      result = btools.CheckReadme(packagePath, readmeFileName, { updateTimestamp: true });
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
 
-        if (result) {
-            assert.fail(`Readme file '${path.join(packagePath, readmeFileName)}' needs to be updated:${os.EOL}${result}`);
-        }
+    if (result) {
+      assert.fail(`Readme file '${path.join(packagePath, readmeFileName)}' needs to be updated:${os.EOL}${result}`);
+    }
 
-        done();
-    });
+    done();
+  });
 });
