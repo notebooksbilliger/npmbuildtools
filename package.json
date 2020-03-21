@@ -1,6 +1,6 @@
 {
     "name": "@nbb.com/npmbuildtools",
-    "version": "2.2.13",
+    "version": "2.2.14",
     "description": "Tools for use with npm package management.",
     "main": "index.js",
     "scripts": {
@@ -47,5 +47,12 @@
         "@types/node": "^13.9.1",
         "@types/semver": "^7.1.0",
         "mocha": "^7.1.0"
+    },
+    "semistandard": {
+        "ignore": [
+            "**/lib/*",
+            "**/doc/*",
+            "**/test/*"
+        ]
     }
 }
