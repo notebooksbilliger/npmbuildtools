@@ -49,10 +49,6 @@
         "mocha": "^7.1.0"
     },
     "semistandard": {
-        "ignore": [
-            "**/lib/*",
-            "**/doc/*"
-        ],
         "env": "mocha"
     }
 }
