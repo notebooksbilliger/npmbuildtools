@@ -4,12 +4,13 @@
     "description": "Tools for use with npm package management.",
     "main": "index.js",
     "scripts": {
+        "postinstall": "node -e \"require('./lib/check-global-deps').CheckGlobalDeps('semistandard')\"",
         "pretest": "npm run build",
         "test": "node ./node_modules/mocha/bin/_mocha --timeout 999999 --colors ./test/_suite.js",
         "prebuild": "node -e \"require('./lib/declaration-files').RemoveDeclarations()\"",
         "build": "tsc -p tsconfig.build.json",
         "postbuild": "tsc -p tsconfig.json",
-        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.pretest', 'scripts.test', 'scripts.prebuild', 'scripts.build', 'scripts.postbuild', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { logLevel: 'verbose' })\"",
+        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.postinstall', 'scripts.pretest', 'scripts.test', 'scripts.prebuild', 'scripts.build', 'scripts.postbuild', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { logLevel: 'verbose' })\"",
         "prepublishOnly": "node -e \"require('./lib/generate-adoc').GenerateReadme()\""
     },
     "keywords": [
