@@ -1,3 +1,5 @@
+/** @module index */
+
 const colors = require('colors');
 const cp = require('child_process');
 const os = require('os');
@@ -29,9 +31,10 @@ if (npm_version === undefined) {
 // #endregion
 
 // #region require(tar)
+/** @ignore */
 var tar;
 if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
-  /**
+  /*
    * In order to get the same file modes in the headers of the newly
    * created tar file as in the headers of the source tar file,
    * tar version 4 must be used because npm uses tar version 4 as well.
@@ -62,15 +65,18 @@ if (semver.lte(npm_version, npm_version_latest_using_tar4)) {
 
 // #region NPM console
 /**
-* Configures the `console` object for npm-like output. Call this function if
-* you have a `ConsoleOptions` object in place and want your output to look
-* like npm output. When finished, call `consoleResetNPM()` to revert `console`
-* to it's prior state.
-* @param {ConsoleOptions} consoleOptions A `ConsoleOptions` object.
-* @returns {ConsoleOptions} A safeguarded `ConsoleOptions` object.
-*/
+ * Configures the `console` object for npm-like output. Call this function if
+ * you have a {@link module:index~ConsoleOptions} object in place and want your
+ * output to look like npm output. When finished, call
+ * [consoleResetNPM()]{@link module:index~consoleResetNPM} to revert `console`
+ * to it's prior state.
+ * @param {ConsoleOptions_|ConsoleOptions=} consoleOptions A
+ * {@link module:index~ConsoleOptions} object.
+ * @returns {ConsoleOptions} A safeguarded {@link module:index~ConsoleOptions}
+ * object.
+ */
 function consoleInitNPM (consoleOptions) {
-  consoleOptions = exports.ConsoleLogLevel.Validate(consoleOptions);
+  var result = exports.ConsoleLogLevel.Validate(consoleOptions);
 
   var theme = {
     debug: 'reset',
@@ -88,13 +94,13 @@ function consoleInitNPM (consoleOptions) {
   }
 
   var prefixes = {};
-  if (consoleOptions.verbose) {
+  if (result.verbose) {
     prefixes.info = 'npm '.reset + 'notice'.blue + ' ';
   } else {
     prefixes.info = null;
   }
 
-  if (consoleOptions.debug) {
+  if (result.debug) {
     prefixes.debug = 'npm '.reset + 'debug'.yellow + ' ';
   } else {
     prefixes.debug = null;
@@ -107,12 +113,13 @@ function consoleInitNPM (consoleOptions) {
   exports.ConsolePushSystemPrefixes(systemPrefixes);
   exports.ConsolePushPrefixes(prefixes);
 
-  return consoleOptions;
+  return result;
 }
 
 /**
  * Resets all changes on `console` that are made by a prior call of
- * `consoleInitNPM()`.
+ * [consoleInitNPM()]{@link module:index~consoleInitNPM}.
+ * @returns {void}
  */
 function consoleResetNPM () {
   exports.ConsolePopSystemPrefixes();
@@ -125,7 +132,9 @@ function consoleResetNPM () {
 /**
  * @param {string[][]} clientScripts An array of node commands to run on the
  * package directory.
- * @param {ConsoleOptions=} consoleOptions A `ConsoleOptions` object.
+ * @param {ConsoleOptions_|ConsoleOptions=} consoleOptions A
+ * {@link module:index~ConsoleOptions} object.
+ * @returns {void}
  */
 exports.PostPack = (clientScripts, consoleOptions) => {
   consoleOptions = consoleInitNPM(consoleOptions);
@@ -376,10 +385,15 @@ function postPack (clientScripts, options) {
 
 // #region SliceArgv()
 /**
+ * Searches for a file name in a parameter array using only the file's base name
+ * and, if found, returns the part of the array sliced from the next position
+ * the file name has been found in. Otherwise, the whole input array is returned
+ * by default.
  * @param {string[]} argv The array to slice - usually `process.argv`.
  * @param {string} file The file name to lookup, usually `__filename`.
  * @param {boolean=} noDefaultAll Do *not* return the whole input array `argv`
  * if `file` could not be found.
+ * @returns {string[]}
  */
 exports.SliceArgv = (argv, file, noDefaultAll) => {
   if (!Array.isArray(argv)) {
@@ -461,34 +475,45 @@ exports.ColorizeDiff = (diff, addedColor, removedColor, unchangedColor) => {
 // #endregion
 
 // #region Console Capturing Support
-// #region  Variables
+// #region Types
+/**
+ * Function to reset the `console` hook(s) akquired for capturing outputs.
+ * @callback UnhookIntercept
+ * @returns {void}
+ * @private
+ */
+// #endregion
+
+// #region Variables
 /**
  * Internal buffer for captured stdout text lines.
  * @type {string[]}
+ * @private
  */
 var stdout = [];
 
 /**
  * Internal buffer for captured stderr text lines.
  * @type {string[]}
+ * @private
  */
 var stderr = [];
 
 /**
  * Internal variable for caching a function that resets stdout and stderr.
- * @type {()=>void}
+ * @type {UnhookIntercept}
  */
 var unhookIntercept = null;
 
 /**
- * @returns A buffer of captured stdout text lines.
+ * A buffer for captured stdout text lines.
  * @type {string[]}
  */
 exports.stdout = [];
 defineReadOnlyProperty('stdout', false, () => stdout);
 
 /**
- * @returns A buffer of captured stderr text lines.
+ * A buffer for captured stderr text lines.
  * @type {string[]}
  */
 exports.stderr = [];
@@ -496,10 +521,13 @@ defineReadOnlyProperty('stderr', false, () => stderr);
 // #endregion
 
 /**
- * Starts capturing the console. If the `DebugMode` property evaluates to
- * `true`, all captured content is also still forwarded to the console,
- * otherwise the console won't receive any content until `ConsoleCaptureStop()`
- * is called.
+ * Starts capturing `console` output.
+ *
+ * If [DebugMode]{@link module:index.DebugMode} evaluates to `true`, all
+ * captured content is also still forwarded to the console. Otherwise, the
+ * console won't receive any content until
+ * [ConsoleCaptureStop()]{@link module:index.ConsoleCaptureStop} is called.
+ * @returns {void}
  */
 exports.ConsoleCaptureStart = () => {
   if (unhookIntercept) {
@@ -529,10 +557,13 @@ exports.ConsoleCaptureStart = () => {
 };
 
 /**
- * Stops capturing the console.
+ * Stops capturing `console` output.
  * @param {boolean} emit Specifies whether to flush all buffered content to the
- * console. The internal buffers will nevertheless be retained until the next
- * call of `ConsoleCaptureStart()`.
+ * console.
+ *
+ * The internal buffers will nevertheless be retained until the next
+ * call of [ConsoleCaptureStart()]{@link module:index.ConsoleCaptureStart}.
+ * @returns {void}
  */
 exports.ConsoleCaptureStop = (emit = false) => {
   if (!unhookIntercept) {
@@ -549,77 +580,149 @@ exports.ConsoleCaptureStop = (emit = false) => {
 // #endregion
 
 // #region Console Formatting Support
+
+// #region Types
+/**
+ * Level of output verbosity.
+ * @typedef {'default'|'verbose'|'debug'} LogLevel
+ */
+//
+/**
+ * A set of options specifying the console output verbosity.
+ *
+ * Will be the only definition remaining starting with next major version.
+ * @typedef {object} ConsoleOptions
+ * @property {LogLevel} logLevel The overall level of console output verbosity.
+ * @property {boolean} [verbose] Emit verbose output.
+ *
+ * Automatically set to `true` if `{@link module:index~ConsoleOptions#logLevel}`
+ * is set to {@link module:index.ConsoleLogLevel}`.verbose` or higher, unless
+ * specified explicitly.
+ * @property {boolean} [debug] Emit debug output.
+ *
+ * Automatically set to `true` if `{@link module:index~ConsoleOptions#logLevel}`
+ * is set to {@link module:index~ConsoleLogLevel}`.debug` or higher, unless
+ * specified explicitly.
+ */
+//
+/**
+ * @typedef {object} ConsoleOptions_
+ * @property {LogLevel} [logLevel]
+ * @property {boolean} [verbose]
+ * @property {boolean} [debug]
+ * @deprecated May be removed with the next major version update.
+ */
+// #endregion
+
 // #region  Variables
-/** Internal variable storing the current prefix set. */
+/**
+ * Internal variable storing the current prefix set.
+ * @type {object}
+ */
 var consoleSystemPrefix = {};
 
-/** Internal stack buffer for system prefixes. */
+/**
+ * Internal stack buffer for system prefixes.
+ * @type {object[]}
+ */
 var consoleSystemPrefixes = [];
-/** Internal stack buffer for prefixes. */
+
+/**
+ * Internal stack buffer for prefixes.
+ * @type {object[]}
+ */
 var consolePrefixes = [];
-/** Internal stack buffer for themes. */
+
+/**
+ * Internal stack buffer for themes.
+ * @type {object[]}
+ */
 var consoleThemes = [];
+
 /**
  * A list of supported console platforms. These values are valid parameters for
- * `ConsoleInit()`.
+ * [ConsoleInit()]{@link module:index.ConsoleInit}.
+ * @type {string[]}
  */
 exports.ConsoleSupportedPlatforms = ['github', 'devops', 'win32', 'other', undefined];
+
 /**
  * A list of default methods on the `console` object.
+ * @type {string[]}
  */
 exports.ConsoleDefaultMethods = ['debug', 'info', 'warn', 'error'];
+
 /**
- * Enumeration of valid console log levels, alon with a validator for
- * `ConsoleOptions` objects.
+ * @callback Validate
+ * @description Checks a [ConsoleOptions]{@link module:index~ConsoleOptions}
+ * object.
+ * @param {ConsoleOptions_|ConsoleOptions} consoleOptions A
+ * [ConsoleOptions]{@link module:index~ConsoleOptions} object.
+ * @returns {ConsoleOptions} A safeguarded
+ * [ConsoleOptions]{@link module:index~ConsoleOptions} object.
+ */
+//
+/**
+ * @typedef {object} ConsoleLogLevel Enumeration of valid console log levels, along with a validator for
+ * [ConsoleOptions]{@link module:index~ConsoleOptions} objects.
+ * @property {number} default The default log level, muting the `info()` and
+ * `debug()` methods of the `console` object.
+ * @property {number} verbose The verbose log level, muting the `debug()`
+ * method of the `console` object.
+ * @property {number} debug The debug log level, muting no methods of the
+ * `console` object.
+ * @property {module:index~Validate} Validate A validator for
+ * [ConsoleOptions]{@link module:index~ConsoleOptions} objects.
+ */
+//
+/**
+ * Instance of {@link module:index~ConsoleLogLevel}.
+ * @type {ConsoleLogLevel}
  */
 exports.ConsoleLogLevel = {
   default: 0,
   verbose: 1,
   debug: 2,
-  /**
-   * Checks and returns a `ConsoleOptions` object.
-   * @param {ConsoleOptions} consoleOptions A `ConsoleOptions` object.
-   * @returns {ConsoleOptions} A safeguarded `ConsoleOptions` object.
-   * */
   Validate: (consoleOptions) => {
+    /** @type {ConsoleOptions} */
+    var result;
     if (!consoleOptions) {
-      consoleOptions = { logLevel: 'default', verbose: false, debug: false };
-    }
-    if (consoleOptions.logLevel === undefined) {
-      console.warn('Using \'ConsoleOptions\' without specifying the \'logLevel\' property is deprecated and may no longer be supported from the next major version release on.');
-      consoleOptions.logLevel = 'default';
-    }
-    if (consoleOptions.verbose === undefined) {
-      consoleOptions.verbose = false;
-    }
-    if (consoleOptions.debug === undefined) {
-      consoleOptions.debug = false;
+      result = { logLevel: 'default', verbose: false, debug: false };
+    } else {
+      result = { logLevel: consoleOptions.logLevel, verbose: consoleOptions.verbose, debug: consoleOptions.debug };
     }
 
-    var logLevel = exports.ConsoleLogLevel[consoleOptions.logLevel];
+    if (result.logLevel === undefined) {
+      console.warn('Using \'ConsoleOptions\' without specifying the \'logLevel\' property is deprecated and may no longer be supported from the next major version release on.');
+      result.logLevel = 'default';
+    }
+    if (result.verbose === undefined) {
+      result.verbose = false;
+    }
+    if (result.debug === undefined) {
+      result.debug = false;
+    }
+
+    var logLevel = exports.ConsoleLogLevel[result.logLevel];
     if (logLevel >= exports.ConsoleLogLevel.verbose) {
-      consoleOptions.verbose = true;
+      result.verbose = true;
     }
     if (logLevel >= exports.ConsoleLogLevel.debug) {
-      consoleOptions.debug = true;
+      result.debug = true;
     }
 
-    return consoleOptions;
+    return result;
   }
 };
-
-/**
- * @typedef {'default'|'verbose'|'debug'} LogLevel
- * @typedef { { logLevel?: LogLevel, verbose?: boolean, debug?: boolean} } ConsoleOptions */ // Deprecated, albeit new in 2.2.0
-/* @typedef { { logLevel: LogLevel, verbose?: boolean, debug?: boolean} } ConsoleOptions    // Will be new definition starting with next major version
- */
 // #endregion
 
 /**
- * Resets and initializes the `console` object.
+ * Resets (i.e. calls [ConsoleReset()]{@link module:index.ConsoleReset}) and
+ * initializes the `console` object.
  * @param {('github'|'devops'|'win32'|'other')=} platform The platform `console`
  * output is meant to look like. If omitted, the platform will be evaluated
  * automatically.
+ * @returns {void}
  */
 exports.ConsoleInit = (platform) => {
   exports.ConsoleReset();
@@ -723,8 +826,9 @@ exports.ConsoleInit = (platform) => {
 };
 
 /**
- * Resets the console object entirely (i.e. resotres all stacks until there's
+ * Resets the `console` object entirely (i.e. resotres all stacks until there's
  * nothing left on any of them).
+ * @returns {void}
  */
 exports.ConsoleReset = () => {
   while (consoleSystemPrefixes.length > 0) {
@@ -742,19 +846,21 @@ exports.ConsoleReset = () => {
 
 /**
  * Configures the console according to console options and pushes the entire
- * profile to stacks.
- * @param {ConsoleOptions=} consoleOptions A `ConsoleOptions` object.
- * @returns {ConsoleOptions} A safeguarded `ConsoleOptions` object.
+ * profile to the according stacks.
+ * @param {(ConsoleOptions_|ConsoleOptions)=} consoleOptions A
+ * [ConsoleOptions]{@link module:index~ConsoleOptions} object.
+ * @returns {ConsoleOptions} A safeguarded
+ * [ConsoleOptions]{@link module:index~ConsoleOptions} object.
  */
 exports.ConsolePushOptions = (consoleOptions) => {
-  consoleOptions = exports.ConsoleLogLevel.Validate(consoleOptions);
+  var result = exports.ConsoleLogLevel.Validate(consoleOptions);
 
   var prefixes = {};
-  if (!consoleOptions.verbose) {
+  if (!result.verbose) {
     prefixes.info = null;
   }
 
-  if (!consoleOptions.debug) {
+  if (!result.debug) {
     prefixes.debug = null;
   }
 
@@ -762,11 +868,12 @@ exports.ConsolePushOptions = (consoleOptions) => {
   exports.ConsolePushSystemPrefixes();
   exports.ConsolePushPrefixes(prefixes);
 
-  return consoleOptions;
+  return result;
 };
 
 /**
  * Restores an entire profile from the stacks.
+ * @returns {void}
  */
 exports.ConsolePopOptions = () => {
   exports.ConsolePopTheme();
@@ -778,8 +885,10 @@ exports.ConsolePopOptions = () => {
  * Saves the current prefixes to a stack and applies new prefixes.
  * @param {Object=} prefix A set of new prefixes. If omitted, an empty set of
  * prefixes will be pushed (and reset nothing when
- * `ConsolePopPrefixes()` is called). If the prefix value for a method is set to
- * `null`, that method will be **muted**!
+ * [ConsolePopPrefixes()]{@link module:index.ConsolePopPrefixes} is called). If
+ * the prefix value for a method is set to `null`, that method will be
+ * **muted**!
+ * @returns {void}
  *
  * @example
  * ConsolePushPrefixes({
@@ -808,7 +917,10 @@ exports.ConsolePushPrefixes = (prefix) => {
       console[key] = (text) => { };
     } else {
       var stream = (key === 'error') ? 'stderr' : 'stdout';
-      /** @param {string} text */
+      /**
+       * @param {string} text
+       * @ignore
+       */
       console[key] = (text) => {
         var eol = os.EOL;
         if (text.endsWith('\b')) {
@@ -828,6 +940,7 @@ exports.ConsolePushPrefixes = (prefix) => {
 /**
  * Restores the prefixes from the stack that were saved last. If there's no
  * further set of prefixes on the stack, nothing is changed.
+ * @returns {void}
  */
 exports.ConsolePopPrefixes = () => {
   if (consolePrefixes.length < 1) {
@@ -849,7 +962,9 @@ exports.ConsolePopPrefixes = () => {
  * prefixes.
  * @param {Object=} system A set of new system prefixes. If omitted, an empty
  * set of system prefixes will be pushed (and reset nothing when
- * `ConsolePopSystemPrefixes()` is called).
+ * [ConsolePopSystemPrefixes()]{@link module:index.ConsolePopSystemPrefixes} is
+ * called).
+ * @returns {void}
  */
 exports.ConsolePushSystemPrefixes = (system) => {
   var cache = {};
@@ -887,9 +1002,12 @@ exports.ConsolePopSystemPrefixes = () => {
 /**
  * Saves the current themes to a stack and applies a new theme.
  * @param {Object=} theme A theme. If omitted, an empty theme will be pushed
- * (and reset nothing when `ConsolePopTheme()` is called).
- * @see See also the documentation of themes on the npm `colors` package
- * homepage (issue `npm home colors` on the command line).
+ * (and reset nothing when
+ * [ConsolePopTheme()]{@link module:index.ConsolePopTheme} is called).
+ * @see See also in the documentation of themes on the npm colors package
+ * [homepage]{@link https://github.com/Marak/colors.js} (or simply issue `npm
+ * home colors` on the command line).
+ * @returns {void}
  */
 exports.ConsolePushTheme = (theme) => {
   var cache = {};
@@ -1024,18 +1142,30 @@ if (String.prototype.plain == null) {
 // #endregion
 
 // #region Read-only properties
+// #region Types
 /**
- * Internal list of read-only properties added by `defineReadOnlyProperty()`
+ * A function returning a property value.
+ * @callback Getter
+ * @returns {object}
+ */
+// #endregion
+
+/**
+ * Internal list of read-only properties added using
+ * [defineReadOnlyProperty()]{@link module:index~defineReadOnlyProperty}.
  * @type {string[]}
  */
 const readOnlyProperties = [];
 
 /**
  * Creates a read-only property on the `exports` object and optionally
- * adds the property name `p` to the `readOnlyProperties[]` array.
+ * adds the property name `p` to the
+ * [readOnlyProperties]{@link module:index~readOnlyProperties}[] array.
  * @param {string} p The property name.
- * @param {boolean} enumerable Controls whether the property name `p` is added to the `readOnlyProperties[]` array.
- * @param {()=>any} getter The `get` function.
+ * @param {boolean} enumerable Controls whether the property name `p` is added
+ * to the [readOnlyProperties]{@link module:index~readOnlyProperties}[] array.
+ * @param {module:index~Getter} getter The `get` function.
+ * @returns {void}
  */
 function defineReadOnlyProperty (p, enumerable, getter) {
   Object.defineProperty(exports, p, {
@@ -1052,53 +1182,66 @@ function defineReadOnlyProperty (p, enumerable, getter) {
 }
 
 /**
- * @returns A list of read-only properties that have been added
- * with `defineReadOnlyProperty()` and parameter
- * `enumerable` set to `true`.
+ * A list of read-only properties that have been added using the
+ * [defineReadOnlyProperty()]{@link module:index~defineReadOnlyProperty}
+ * function having the `enumerable` parameter set to `true`.
  *
- * ---
- * Albeit all read-only properties added with `defineReadOnlyProperty()`
- * have their `enumerable` attribute set to `false` (to avoid them
- * being serialized e.g. throuch `JSON.stringify()`), their names can
- * be obtained through this property.
+ * >Albeit all read-only properties added with
+ * >[defineReadOnlyProperty()]{@link module:index~defineReadOnlyProperty} have
+ * >their `enumerable` attribute set to `false` (to avoid them being serialized
+ * >e.g. through
+ * [JSON.stringify()]{@link https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify}),
+ * their names can be obtained through this property.
  * @type {string[]}
  */
 exports.ReadOnlyProperties = null;
 defineReadOnlyProperty('ReadOnlyProperties', false, () => readOnlyProperties);
 
-/** Internal, initialized on module load */
+/**
+ * Internal, initialized on module load.
+ * @type {boolean}
+ */
 const runningInGitHub = !(process.env.GITHUB_WORKFLOW === undefined);
 /**
- * @returns A value indicating if the module is running as part of a GitHub
- * Action workflow.
+ * A value indicating if the module is running as part of a
+ * [GitHub Actions Workflow]{@link https://help.github.com/en/actions/configuring-and-managing-workflows}.
+ * @type {boolean}
  */
 exports.RunningInGitHub = false;
 defineReadOnlyProperty('RunningInGitHub', true, () => runningInGitHub);
 
-/** Internal, initialized on module load */
+/**
+ * Internal, initialized on module load.
+ * @type {boolean}
+ */
 const runningInDevOps = !(process.env.AGENT_ID === undefined);
 /**
- * @returns A value indicating if the module is running as part of an Azure
- * DevOps task.
+ * A value indicating if the module is running as part of an
+ * [Azure DevOps Pipeline build or release task]{@link https://docs.microsoft.com/en-us/azure/devops/pipelines/process/tasks?view=azure-devops&tabs=yaml}.
+ * @type {boolean}
  */
 exports.RunningInDevOps = false;
 defineReadOnlyProperty('RunningInDevOps', true, () => runningInDevOps);
 
-/** Internal, initialized on module load */
+/**
+ * Internal, initialized on module load.
+ * @type {boolean}
+ */
 const debugMode = (process.env.ACTIONS_STEP_DEBUG && `${process.env.ACTIONS_STEP_DEBUG}`.toLowerCase() === 'true') || // applies to GitHub Actions
                   (process.env.SYSTEM_DEBUG && `${process.env.SYSTEM_DEBUG}`.toLowerCase() === 'true') || // applies to Azure DevOps Pipelines
                   (process.argv && process.argv.includes('--vscode-debug'));
 /**
-* @returns A value indicating if the module is running
-* in debug mode, evaluating multiple different conditions.
+ * A value indicating if the module is running in debug mode, evaluating several
+ * different conditions.
+ * @type {boolean}
 */
 exports.DebugMode = false;
 defineReadOnlyProperty('DebugMode', true, () => debugMode);
 
 /**
-* @returns A value indicating if the termial (i.e. `stdout`)
-* can be blocked to wait for user input, evaluating multiple
-* different conditions.
+ * A value indicating if the termial (i.e. `stdout`) can be blocked to wait for
+ * user input, evaluating multiple different conditions.
+ * @type {boolean}
  */
 exports.TerminalCanBlock = true;
 defineReadOnlyProperty('TerminalCanBlock', true, () => {
@@ -1106,8 +1249,8 @@ defineReadOnlyProperty('TerminalCanBlock', true, () => {
 });
 
 /**
-* @returns A string indicating which console platform has been evaluated
-automatically.
+ * A value indicating which console platform has been evaluated automatically.
+ * @type {string}
  */
 exports.ConsolePlatform = '';
 defineReadOnlyProperty('ConsolePlatform', true, () => {
