@@ -260,6 +260,101 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
   });
 });
 
+describe(`${thisPackage.name} os-utils tests`, function () {
+  it('ResolveEnv() should succeed', function (done) {
+    var envVarKeys = Object.keys(process.env);
+    for (let index = 0; index < envVarKeys.length; index++) {
+      if (process.env[envVarKeys[index]].indexOf('%') > 0) {
+        continue;
+      }
+      if (process.env[envVarKeys[index]].indexOf('$') > 0) {
+        continue;
+      }
+
+      var result;
+      btools.ConsoleCaptureStart();
+      try {
+        result = btools.os.ResolveEnv(`%${envVarKeys[index]}%`);
+        btools.ConsoleCaptureStop();
+      } catch (err) {
+        btools.ConsoleCaptureStop();
+        throw err;
+      }
+
+      assert.strictEqual(`${result}`, process.env[envVarKeys[index]], 'result should be');
+    }
+
+    done();
+  });
+
+  it('ResolvePath() should succeed with implicit limit 1 and no result', function (done) {
+    var randomFile = Math.random().toString(36).substring(2, 15);
+    var result;
+    btools.ConsoleCaptureStart();
+    try {
+      result = btools.os.ResolvePath(randomFile, 1);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
+
+    assert.strictEqual(result, '', 'result should be');
+
+    done();
+  });
+
+  it('ResolvePath() should succeed with implicit limit 1 and a result', function (done) {
+    var result;
+    btools.ConsoleCaptureStart();
+    try {
+      result = btools.os.ResolvePath('node');
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
+
+    assert.strictEqual(result, process.execPath, 'result should be');
+
+    done();
+  });
+
+  it('ResolvePath() should succeed with limit 0 and no result', function (done) {
+    var randomFile = Math.random().toString(36).substring(2, 15);
+    var result;
+    btools.ConsoleCaptureStart();
+    try {
+      result = btools.os.ResolvePath(randomFile, 0);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
+
+    assert.ok(result.length === 0, 'result count should be');
+
+    done();
+  });
+
+  it('ResolvePath() should succeed with limit 0 and a result', function (done) {
+    var result;
+    btools.ConsoleCaptureStart();
+    try {
+      result = btools.os.ResolvePath('node', 0);
+      btools.ConsoleCaptureStop();
+    } catch (err) {
+      btools.ConsoleCaptureStop();
+      throw err;
+    }
+
+    assert.ok(result.length > 0, 'result should not be empty');
+    assert.strictEqual(result[0], process.execPath, 'result should be');
+
+    done();
+  });
+});
+
 describe(`${thisPackage.name} declaration-files tests`, function () {
   var deffiles = require('../lib/declaration-files');
 

@@ -56,6 +56,7 @@ export var RunningInDevOps: boolean;
 export var DebugMode: boolean;
 export var TerminalCanBlock: boolean;
 export var ConsolePlatform: string;
+export var os: typeof import("./lib/os-utils");
 export type GenerateReadmeOptions = {
     EOL?: string;
     updateTimestamp?: boolean;

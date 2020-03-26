@@ -1266,4 +1266,6 @@ defineReadOnlyProperty('ConsolePlatform', true, () => {
 });
 // #endregion
 
+exports.os = require('./lib/os-utils');
+
 exports.ConsoleInit();
