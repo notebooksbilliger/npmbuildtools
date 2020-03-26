@@ -1,11 +1,6 @@
 export function PostPack(clientScripts: string[][], consoleOptions?: ConsoleOptions_ | ConsoleOptions): void;
 export function SliceArgv(argv: string[], file: string, noDefaultAll?: boolean): string[];
-export function CheckReadme(packagePath?: string, readmeFileName?: string, options?: {
-    EOL?: string;
-    updateTimestamp?: boolean;
-    noPackageJsonUpdate?: boolean;
-    dependencyType?: string;
-}): string;
+export function CheckReadme(packagePath?: string, readmeFileName?: string, options?: import("./lib/generate-adoc").GenerateReadmeOptions): string;
 export function ColorizeDiff(diff: any, addedColor: any, removedColor: any, unchangedColor: any): any;
 export var stdout: string[];
 export var stderr: string[];
@@ -58,10 +53,34 @@ export var TerminalCanBlock: boolean;
 export var ConsolePlatform: string;
 export var os: typeof import("./lib/os-utils");
 export type GenerateReadmeOptions = {
+    /**
+     * The line separator to use (defaults to `os.EOL` if
+    omitted).
+     */
     EOL?: string;
+    /**
+     * Controls whether to update the date
+    specification in the output document (i.e. the asciidoc `Date` attribute,
+    which might be resolved and translated when saving in a different format).
+     */
     updateTimestamp?: boolean;
+    /**
+     * Controls whether to update the
+    package file (e.g. with the path of the generated document in the `readme`
+    element).
+     */
     noPackageJsonUpdate?: boolean;
-    dependencyType?: string;
+    /**
+     * Controls the
+    rendering of the `npm install` command in the Installation block (defaults
+    to `regular` if omitted).
+     */
+    dependencyType?: "none" | "global" | "regular" | "dev" | "opt";
+    /**
+     * The format to use for saving
+    the generated file (defaults to `adoc` if omitted).
+     */
+    outputFormat?: "adoc" | "xml" | "md";
 };
 /**
  * Function to reset the `console` hook(s) akquired for capturing outputs.
