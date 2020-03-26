@@ -7,8 +7,8 @@ npmbuildtools
 :Revision: 2.2.14
 :License: MIT
 
-- Version {revision}
-- Licensed under the {license} license.
+- Version 2.2.14
+- Licensed under the MIT license.
 
 Tools for use with npm package management.
 
@@ -63,20 +63,20 @@ to be applying changes to a temporary directory and then repackage the package
 file `npm pack` has created before.
 
 The `PostPack()` function provides you with an opportunity to do so. It is
-usually called after the package file (`{packagefile}`) has been created, e.g.
+usually called after the package file (`<name>-<version>.tgz`) has been created, e.g.
 as part of the `scripts.postpack` element of `package.json`. It then
 decompresses the file to a temporary folder, calls the commands provided in the
 `clientScripts` parameter and afterwards compresses the temporary folder to a
-new `{packagefile}` file, which will overwrite the existing package file.
+new `<name>-<version>.tgz` file, which will overwrite the existing package file.
 
 .npm publish
 [NOTE]
 ====
 If putting the call of `PostPack()` in the `scripts.postpack` element of
 `package.json`, `npm publish`, called without any further parameters will fail
-due to NOT creating an intermediate package file (`{packagefile}`), which
+due to NOT creating an intermediate package file (`<name>-<version>.tgz`), which
 `PostPack()` relies on (and therefore fails). To resolve this, `PostPack()`
-stores the full path and name of the package file (`{packagefile}`) in both, an
+stores the full path and name of the package file (`<name>-<version>.tgz`) in both, an
 environment variable `NPM_TARBALL` as well as a file `NPM_TARBALL` in the
 working tree. This way, automation doesn't need to care about the currently
 applicable name of the package file.
