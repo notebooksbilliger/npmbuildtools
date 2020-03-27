@@ -261,7 +261,7 @@ describe(`${thisPackage.name} vc-utils tests`, function () {
 });
 
 describe(`${thisPackage.name} os-utils tests`, function () {
-  it('ResolveEnv() should succeed', function (done) {
+  it('ResolveEnv() should succeed for platform \'win32\'', function (done) {
     var envVarKeys = Object.keys(process.env);
     for (let index = 0; index < envVarKeys.length; index++) {
       if (process.env[envVarKeys[index]].indexOf('%') > 0) {
@@ -274,14 +274,40 @@ describe(`${thisPackage.name} os-utils tests`, function () {
       var result;
       btools.ConsoleCaptureStart();
       try {
-        result = btools.os.ResolveEnv(`%${envVarKeys[index]}%`);
+        result = btools.os.ResolveEnv(`%${envVarKeys[index]}%`, 'win32');
         btools.ConsoleCaptureStop();
       } catch (err) {
         btools.ConsoleCaptureStop();
         throw err;
       }
 
-      assert.strictEqual(`${result}`, process.env[envVarKeys[index]], 'result should be');
+      assert.strictEqual(`${result}`, process.env[envVarKeys[index]], `result for environment variable #${index} ('${envVarKeys[index]}') should be`);
+    }
+
+    done();
+  });
+
+  it('ResolveEnv() should succeed for platform \'other\'', function (done) {
+    var envVarKeys = Object.keys(process.env);
+    for (let index = 0; index < envVarKeys.length; index++) {
+      if (process.env[envVarKeys[index]].indexOf('%') > 0) {
+        continue;
+      }
+      if (process.env[envVarKeys[index]].indexOf('$') > 0) {
+        continue;
+      }
+
+      var result;
+      btools.ConsoleCaptureStart();
+      try {
+        result = btools.os.ResolveEnv(`$${envVarKeys[index]}`, 'other');
+        btools.ConsoleCaptureStop();
+      } catch (err) {
+        btools.ConsoleCaptureStop();
+        throw err;
+      }
+
+      assert.strictEqual(`${result}`, process.env[envVarKeys[index]], `result for environment variable #${index} ('${envVarKeys[index]}') should be`);
     }
 
     done();
@@ -350,6 +376,22 @@ describe(`${thisPackage.name} os-utils tests`, function () {
 
     assert.ok(result.length > 0, 'result should not be empty');
     assert.strictEqual(result[0], process.execPath, 'result should be');
+
+    done();
+  });
+
+  it('ListProperties() should list \'process\' properties accurately', (done) => {
+    btools.os.ListProperties(process, { namePrefix: 'process', skipTypeOf: ['function'] }).forEach(prop => {
+      console.debug(`      ${prop}`);
+    });
+
+    done();
+  });
+
+  it('ListProperties() should list \'os\' properties accurately', (done) => {
+    btools.os.ListProperties(os, { namePrefix: 'os', skipTypeOf: ['function'] }).forEach(prop => {
+      console.debug(`      ${prop}`);
+    });
 
     done();
   });
