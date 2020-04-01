@@ -7,8 +7,8 @@
         "postinstall": "node -e \"require('./lib/check-global-deps').CheckGlobalDeps('semistandard')\"",
         "pretest": "npm run build",
         "test": "node ./node_modules/mocha/bin/_mocha --timeout 999999 --colors ./test/_suite.js",
-        "ca": "semistandard",
-        "prermdecl": "npm run ca",
+        "linter": "semistandard",
+        "prermdecl": "npm run linter",
         "rmdecl": "node -e \"require('./lib/declaration-files').RemoveDeclarations()\"",
         "prebuild": "npm run rmdecl",
         "build": "tsc -p tsconfig.build.json",
@@ -50,9 +50,9 @@
         "@types/colors": "^1.2.1",
         "@types/fs-extra": "^8.1.0",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^13.9.1",
+        "@types/node": "^13.9.8",
         "@types/semver": "^7.1.0",
-        "mocha": "^7.1.0"
+        "mocha": "^7.1.1"
     },
     "semistandard": {
         "env": "mocha"
