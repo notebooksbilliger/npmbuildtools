@@ -74,7 +74,7 @@ describe(`${thisPackage.name} Console tests`, function () {
   });
 
   btools.ConsoleSupportedPlatforms.forEach(platform => {
-    it(`should succeed for plaform '${platform}'`, function (done) {
+    it(`should succeed for platform '${platform}'`, function (done) {
       btools.ConsoleCaptureStart();
       try {
         // @ts-ignore
@@ -570,7 +570,7 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
 
   it('GenerateReadme() should succeed', function (done) {
     var packagePath = path.resolve('.');
-    var readmeFileName = 'README.adoc';
+    var readmeFileName = 'README.md';
 
     var readmeContent = '';
     var readmeFile = path.join(packagePath, readmeFileName);
@@ -580,7 +580,7 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
 
     btools.ConsoleCaptureStart();
     try {
-      genadoc.GenerateReadme(packagePath, readmeFileName, { updateTimestamp: true });
+      genadoc.GenerateReadme(packagePath, readmeFileName, { updateTimestamp: true, noPackageJsonUpdate: true, outputFormat: 'md' });
       btools.ConsoleCaptureStop();
     } catch (err) {
       btools.ConsoleCaptureStop();
@@ -592,11 +592,11 @@ describe(`${thisPackage.name} AsciiDoc tests`, function () {
     }
 
     assert.ok(fs.existsSync(readmeFile), `File '${readmeFile}' should exist (at least now).`);
-    assert.strictEqual(btools.stdout.length, btools.DebugMode ? 7 : 2, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
+    assert.strictEqual(btools.stdout.length, btools.DebugMode ? 14 : 6, `stdout should contain exact number of lines:${os.EOL}${btools.stdout.join('')}`);
     // @ts-ignore
     assert.strictEqual(btools.stdout[0].plain('info'), `Creating/Updating file '${readmeFileName}'.${os.EOL}`, 'stdout first  line should contain');
     // @ts-ignore
-    assert.strictEqual(btools.stdout[btools.stdout.length - 1].plain('info'), `Successfully updated readme file '${readmeFile}'.${os.EOL}`, 'stdout second line should contain');
+    assert.strictEqual(btools.stdout[btools.stdout.length - (btools.DebugMode ? 3 : 2)].plain('info'), `Successfully updated readme file '${readmeFile}'.${os.EOL}`, 'stdout line should contain');
     assert.strictEqual(btools.stderr.length, 0, `stderr shouldn't contain any lines:${os.EOL}${btools.stderr.join('')}`);
 
     done();

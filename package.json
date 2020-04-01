@@ -42,6 +42,7 @@
         "glob-gitignore": "^1.0.14",
         "ignore": "^5.1.4",
         "intercept-stdout": "^0.1.2",
+        "pandocjs": "^2.9.2-1.1",
         "semver": "^7.1.3",
         "tar": "^6.0.1",
         "tar4": "npm:tar@^4.4.13"
