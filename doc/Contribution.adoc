@@ -21,5 +21,5 @@ ToDos
 * Make Resolve() in `generate-adoc.js` agjust `link:` directives (i.e. let the
 author link to subpaths as needed to test and afterwards adjust the link
 subpath, if needed).
-* Make Resolve() in `generate-adoc.js` resolve `{attribute}` directives.
 * Make Resolve() in `generate-adoc.js` resolve `[blue]#color#` directives.
+* Add badge support in GenerateReadme() of `generate-adoc.js`.

@@ -1,9 +1,5 @@
 export function RemoveDeclarations(packagePath?: string, options?: {
     declarationFileExtension?: string;
     dryRun?: boolean;
-    consoleOptions?: {
-        logLevel?: "default" | "debug" | "verbose";
-        verbose?: boolean;
-        debug?: boolean;
-    };
+    consoleOptions?: import("..").ConsoleOptions_ | import("..").ConsoleOptions;
 }, ...includeSubfolders: string[]): number;

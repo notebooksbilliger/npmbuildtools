@@ -1,4 +1,10 @@
+.git/
 node_modules
 *.tgz
 NPM_TARBALL
 README.md
+doc/pages
+doc/jsdoc-plugin-cleanoutput.js
+doc/jsdoc-plugin-shortnames.js
+doc/jsdoc-plugin-ignore.js
+jsdoc.json

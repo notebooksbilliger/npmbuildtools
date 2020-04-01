@@ -1,15 +1,19 @@
 {
     "name": "@nbb.com/npmbuildtools",
-    "version": "2.2.13",
+    "version": "2.2.14",
     "description": "Tools for use with npm package management.",
     "main": "index.js",
     "scripts": {
+        "postinstall": "node -e \"require('./lib/check-global-deps').CheckGlobalDeps('semistandard')\"",
         "pretest": "npm run build",
         "test": "node ./node_modules/mocha/bin/_mocha --timeout 999999 --colors ./test/_suite.js",
-        "prebuild": "node -e \"require('./lib/declaration-files').RemoveDeclarations()\"",
+        "linter": "semistandard",
+        "prermdecl": "npm run linter",
+        "rmdecl": "node -e \"require('./lib/declaration-files').RemoveDeclarations()\"",
+        "prebuild": "npm run rmdecl",
         "build": "tsc -p tsconfig.build.json",
         "postbuild": "tsc -p tsconfig.json",
-        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.pretest', 'scripts.test', 'scripts.prebuild', 'scripts.build', 'scripts.postbuild', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { logLevel: 'verbose' })\"",
+        "postpack": "node -e \"require('./index').PostPack([ [ './lib/clean-package-elements', 'scripts.postinstall', 'scripts.pretest', 'scripts.test', 'scripts.prebuild', 'scripts.build', 'scripts.postbuild', 'scripts.postpack', 'scripts.prepublishOnly', 'directories.test', 'directories.doc' ], [ './lib/create-fallback-readme' ] ], { logLevel: 'verbose' })\"",
         "prepublishOnly": "node -e \"require('./lib/generate-adoc').GenerateReadme()\""
     },
     "keywords": [
@@ -30,12 +34,15 @@
         "test": "./test"
     },
     "dependencies": {
+        "@asciidoctor/core": "^2.1.1",
+        "@asciidoctor/docbook-converter": "^2.0.0",
         "colors": "^1.4.0",
         "diff": "^4.0.2",
         "fs-extra": "^8.1.0",
         "glob-gitignore": "^1.0.14",
         "ignore": "^5.1.4",
         "intercept-stdout": "^0.1.2",
+        "pandocjs": "^2.9.2-1.1",
         "semver": "^7.1.3",
         "tar": "^6.0.1",
         "tar4": "npm:tar@^4.4.13"
@@ -44,8 +51,11 @@
         "@types/colors": "^1.2.1",
         "@types/fs-extra": "^8.1.0",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^13.9.1",
+        "@types/node": "^13.9.8",
         "@types/semver": "^7.1.0",
-        "mocha": "^7.1.0"
+        "mocha": "^7.1.1"
+    },
+    "semistandard": {
+        "env": "mocha"
     }
 }

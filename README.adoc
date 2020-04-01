@@ -4,11 +4,11 @@ npmbuildtools
 :Email: <thorbenw@nbb.com>
 :AuthorUrl: https://www.notebooksbilliger.de/
 :Date: 2020-03-17
-:Revision: 2.2.13
+:Revision: 2.2.14
 :License: MIT
 
-- Version {revision}
-- Licensed under the {license} license.
+- Version 2.2.14
+- Licensed under the MIT license.
 
 Tools for use with npm package management.
 
@@ -63,20 +63,20 @@ to be applying changes to a temporary directory and then repackage the package
 file `npm pack` has created before.
 
 The `PostPack()` function provides you with an opportunity to do so. It is
-usually called after the package file (`{packagefile}`) has been created, e.g.
+usually called after the package file (`<name>-<version>.tgz`) has been created, e.g.
 as part of the `scripts.postpack` element of `package.json`. It then
 decompresses the file to a temporary folder, calls the commands provided in the
 `clientScripts` parameter and afterwards compresses the temporary folder to a
-new `{packagefile}` file, which will overwrite the existing package file.
+new `<name>-<version>.tgz` file, which will overwrite the existing package file.
 
 .npm publish
 [NOTE]
 ====
 If putting the call of `PostPack()` in the `scripts.postpack` element of
 `package.json`, `npm publish`, called without any further parameters will fail
-due to NOT creating an intermediate package file (`{packagefile}`), which
+due to NOT creating an intermediate package file (`<name>-<version>.tgz`), which
 `PostPack()` relies on (and therefore fails). To resolve this, `PostPack()`
-stores the full path and name of the package file (`{packagefile}`) in both, an
+stores the full path and name of the package file (`<name>-<version>.tgz`) in both, an
 environment variable `NPM_TARBALL` as well as a file `NPM_TARBALL` in the
 working tree. This way, automation doesn't need to care about the currently
 applicable name of the package file.
@@ -166,26 +166,31 @@ If you expect a function to fail, use the classic pattern and place the capture
 support function accordingly:
 [source,javascript]
 ----
+const assert = require('assert');
 const btools = require('@nbb.com/npmbuildtools');
 
-describe('your test', function() {
-    it('should fail', function(done) {
+function functionToTest () {
+  console.log('something');
+}
 
-        btools.ConsoleCaptureStart();  // start capturing
-        try {
-            functionToTest(); // call the function you expect to fail
-            assert.fail(`should have failed`); // if it unexpectedly succeeds, fail on your own
-            // do NOT stop capturing here because the `catch` block will be called anyway!
-        } catch(err) {
-            btools.ConsoleCaptureStop(); // stop capturing before doing anything else
-            // do your asserts here
-            assert.ok(err instanceof Error, `'err' should be an Error object`);
-            assert.equal(err.message, `expected message`, `Error message should be`)
-        }
+describe('your test', function () {
+  it('should fail', function (done) {
+    btools.ConsoleCaptureStart(); // start capturing
+    try {
+      functionToTest(); // call the function you expect to fail
+      assert.fail('should have failed'); // if it unexpectedly succeeds, fail on your own
+      // do NOT stop capturing here because the `catch` block will be called anyway!
+    } catch (err) {
+      btools.ConsoleCaptureStop(); // stop capturing before doing anything else
+      // do your asserts here
+      assert.ok(err instanceof Error, '\'err\' should be an Error object');
+      assert.strictEqual(err.message, 'expected message', 'Error message should be');
+    }
 
-        done();
-    });
+    done();
+  });
 });
+
 ----
 
 If you expect a function to succeed, you also have to use the classic 'fail'
@@ -195,21 +200,25 @@ test run, you wouldn't get aware of it:
 ----
 const btools = require('@nbb.com/npmbuildtools');
 
-describe('your test', function() {
-    it('should succeed', function(done) {
+function functionToTest () {
+  console.log('something');
+}
 
-        btools.ConsoleCaptureStart();  // start capturing
-        try {
-            functionToTest(); // call the function you expect to fail
-            btools.ConsoleCaptureStop(); // stop capturing regularly because the `catch` block won't be called
-        } catch(err) {
-            btools.ConsoleCaptureStop(); // stop capturing before doing anything else
-            throw err; // now throw the error
-        }
+describe('your test', function () {
+  it('should succeed', function (done) {
+    btools.ConsoleCaptureStart(); // start capturing
+    try {
+      functionToTest(); // call the function you expect to fail
+      btools.ConsoleCaptureStop(); // stop capturing regularly because the `catch` block won't be called
+    } catch (err) {
+      btools.ConsoleCaptureStop(); // stop capturing before doing anything else
+      throw err; // now throw the error
+    }
 
-        done();
-    });
+    done();
+  });
 });
+
 ----
 
 Adaptive Console Formatting
@@ -253,6 +262,8 @@ the console gets messed up if multiple `async` functions _mix up_ their output!
 Example:
 [source,javascript]
 ----
+require('@nbb.com/npmbuildtools');
+
 console.info('Line to complete\b');
 console.info('\bon next call.');
 
@@ -261,9 +272,10 @@ console.warn('\bby more than\b');
 console.warn('\btwo calls.');
 
 console.info('Trying to do something ...\b');
-if (success) {
-    console.info('\bok.');
+if ((Math.random() * 10) >= 5) {
+  console.info('\bok.');
 } else {
-    console.error('\bfailed!')
+  console.error('\bfailed!');
 }
+
 ----

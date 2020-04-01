@@ -22,6 +22,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: Get full git commit history
       run: git fetch --unshallow
+    - run: npm install semistandard -g
     - run: npm install
     - run: npm pack
     - run: npm test

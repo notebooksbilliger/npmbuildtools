@@ -2,5 +2,14 @@
     "files.associations": {
       "*.atpl": "asciidoc"
     },
-    "editor.foldingStrategy": "indentation"
+    "files.exclude": {
+      "**/.git": false
+    },
+    "editor.foldingStrategy": "indentation",
+    "editor.snippetSuggestions": "top",
+    "standard.semistandard": true,
+    "standard.trace.server": "verbose",
+    "standard.usePackageJson": false,
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false
 }

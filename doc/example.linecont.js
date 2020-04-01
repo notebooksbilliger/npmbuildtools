@@ -1,3 +1,5 @@
+require('@nbb.com/npmbuildtools');
+
 console.info('Line to complete\b');
 console.info('\bon next call.');
 
@@ -6,8 +8,8 @@ console.warn('\bby more than\b');
 console.warn('\btwo calls.');
 
 console.info('Trying to do something ...\b');
-if (success) {
-    console.info('\bok.');
+if ((Math.random() * 10) >= 5) {
+  console.info('\bok.');
 } else {
-    console.error('\bfailed!')
+  console.error('\bfailed!');
 }
